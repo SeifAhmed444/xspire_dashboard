@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "219424244128",
+    "project_id": "final-project-28230",
+    "storage_bucket": "final-project-28230.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219424244128:android:7f617a1da3b9879675a4c5",
+        "android_client_info": {
+          "package_name": "com.example.mysterybag"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "219424244128-o80r903m6u49fts46pjv7if4fphk2fko.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mysterybag",
+            "certificate_hash": "ad07c6d99d8df1b4d9536144fb1115a002ccb05c"
+          }
+        },
+        {
+          "client_id": "219424244128-a0edejjnus8ehmp6cs8tjrqrb0e9g3lc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHkC1p4hqpKszCj2LVUsk6At_z3DxxMP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "219424244128-0cnjkbv4spl2igvdii61ombir7r7aijc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "219424244128-6fre0dp8teuvrgik32paqbipsnfv6okv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mysterybag"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219424244128:android:ebf7e892a4de548475a4c5",
+        "android_client_info": {
+          "package_name": "com.example.xspire_dashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "219424244128-a0edejjnus8ehmp6cs8tjrqrb0e9g3lc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHkC1p4hqpKszCj2LVUsk6At_z3DxxMP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "219424244128-0cnjkbv4spl2igvdii61ombir7r7aijc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "219424244128-6fre0dp8teuvrgik32paqbipsnfv6okv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mysterybag"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
