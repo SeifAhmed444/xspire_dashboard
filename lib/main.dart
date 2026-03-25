@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/helper_functions/on_generate_routes.dart';
 import 'package:xspire_dashboard/core/services/custom_bolc_observer.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
+import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 import 'package:xspire_dashboard/firebase_options.dart';
 
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       showSemanticsDebugger: false,
-      initialRoute: DashboardView.routeName,
+      initialRoute: LoginView.routeName,
       onGenerateRoute: onGenerateRoutes,
     );
   }

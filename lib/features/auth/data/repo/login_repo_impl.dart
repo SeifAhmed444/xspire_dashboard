@@ -1,23 +1,22 @@
 import 'package:dartz/dartz.dart';
 import 'package:xspire_dashboard/core/errors/failures.dart';
 import 'package:xspire_dashboard/core/services/app_user.dart';
-import 'package:xspire_dashboard/core/services/auth_service.dart';
 import 'package:xspire_dashboard/features/auth/domain/repo/login_repo.dart';
 
+final Map<String, String> emailAndPassword = {
+  'belal@gmail.com': '123456789',
+  'seif@gmail.com': '123456780',
+};
 
 class LoginRepoImpl implements LoginRepo {
-  final AuthService firebaseAuth;
-
-  LoginRepoImpl(this.firebaseAuth);
   @override
   Future<Either<Failure, AppUser>> login(String email, String password) async {
-    if (email == 'gg@gmail.com' && password == '123456789') {
-      try {
-        var result = await firebaseAuth.signIn(email, password);
-        return right(result);
-      } on Exception catch (e) {
-        return left(ServerFailure(e.toString()));
-      }
+    final savedPassword = emailAndPassword[email];
+
+    if (savedPassword != null && savedPassword == password) {
+      return right(
+        AppUser(id: 'manual_${email.split('@').first}', email: email),
+      );
     } else {
       return left(ServerFailure("Not a managed user"));
     }

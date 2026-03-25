@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/widgets/custom_button.dart';
 import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
-import 'package:xspire_dashboard/features/auth/presentation/cubit/login_cubit.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
 
 class LoginViewBody extends StatefulWidget {
   const LoginViewBody({super.key});

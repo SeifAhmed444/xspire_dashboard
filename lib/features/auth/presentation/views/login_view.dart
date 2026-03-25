@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/features/auth/domain/repo/login_repo.dart';
-import 'package:xspire_dashboard/features/auth/presentation/cubit/login_cubit.dart';
-import 'package:xspire_dashboard/features/auth/presentation/views/widgets/login_bloc_listener.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
+import 'package:xspire_dashboard/features/auth/presentation/views/widgets/login_view_body_bloc_consumer.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});

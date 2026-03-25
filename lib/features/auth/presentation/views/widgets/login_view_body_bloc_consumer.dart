@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/helper_functions/build_bar.dart';
 import 'package:xspire_dashboard/core/widgets/custom_modal_progress_hub.dart';
-import 'package:xspire_dashboard/features/auth/presentation/cubit/login_cubit.dart';
-import 'package:xspire_dashboard/features/auth/presentation/cubit/login_state.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_state.dart';
 import 'package:xspire_dashboard/features/auth/presentation/views/widgets/login_view_body.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 
