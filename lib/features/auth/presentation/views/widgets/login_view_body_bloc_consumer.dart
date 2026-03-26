@@ -15,10 +15,10 @@ class LoginViewBodyBlocConsumer extends StatelessWidget {
     return BlocConsumer<LoginCubit, LoginState>(
       listener: (context, state) {
         if (state is LoginfailureState) {
-          buildBar(context, "your are not Authorized");
+          showErrorBar(context, "your are not Authorized");
         }
         if (state is LoginSuccesState) {
-          buildBar(context, 'Login Successfully');
+          showErrorBar(context, 'Login Successfully');
           // SupabaseStorageServices.createSupabaseBucket(KsupabaseBucket);
           Navigator.pushNamed(context, DashboardView.routeName);
         }

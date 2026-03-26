@@ -1,8 +1,7 @@
 // ignore_for_file: use_super_parameters
 
 import 'package:flutter/material.dart';
-
-
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class CustomModalProgressHUD extends StatelessWidget {
   final Widget child;
@@ -25,39 +24,6 @@ class CustomModalProgressHUD extends StatelessWidget {
       progressIndicator: const CircularProgressIndicator(),
       color: color,
       child: child,
-    );
-  }
-}
-
-class   ModalProgressHUD extends StatelessWidget {
-  final Widget child;
-  final bool inAsyncCall;
-  final double opacity;
-  final Color color;
-  const ModalProgressHUD({
-    Key? key,
-    required this.child,
-    required this.inAsyncCall,
-    this.opacity = 0.5,
-    this.color = Colors.grey, required CircularProgressIndicator progressIndicator,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    if (!inAsyncCall) {
-      return child;
-    }
-    return Stack(
-      children: [
-        child,
-        Opacity(
-          opacity: opacity,
-          child: ModalBarrier(dismissible: false, color: color),
-        ),
-        const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ],
     );
   }
 }
