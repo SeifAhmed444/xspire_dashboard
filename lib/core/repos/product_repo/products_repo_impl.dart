@@ -17,7 +17,7 @@ class ProductsRepoImpl implements ProductsRepo {
     try {
       await databaseServies.addData(
         path: BackendEndpoints.productCollection,
-        data: AddProductInputModel.fromEntity(AddProductInputEntity).toJson(),
+        data: AddProductInputModel.fromEntity(addProductInputEntity).toJson(),
       );
       return const Right(null);
     } catch (e) {

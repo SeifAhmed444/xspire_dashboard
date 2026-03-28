@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:xspire_dashboard/core/services/database_services.dart';
 
-
 class FirestoreServices implements DatabaseServies {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   @override
@@ -10,10 +9,20 @@ class FirestoreServices implements DatabaseServies {
     required Map<String, dynamic> data,
     String? documentId,
   }) async {
-    if (documentId != null) {
-      await firestore.collection(path).doc(documentId).set(data);
-    } else {
-      await firestore.collection(path).add(data);
+    try {
+      print("FirestoreServices: adding data to $path => $data");
+
+      if (documentId != null) {
+        await firestore.collection(path).doc(documentId).set(data);
+      } else {
+        await firestore.collection(path).add(data);
+      }
+
+      print("FirestoreServices: data added successfully");
+    } catch (e, st) {
+      print("FirestoreServices error: $e");
+      print("StackTrace: $st");
+      rethrow;
     }
   }
 

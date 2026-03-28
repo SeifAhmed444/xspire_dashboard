@@ -16,26 +16,42 @@ class AddProductCubit extends Cubit<AddProductState> {
 
   Future<void> addProduct(AddProductInputEntity addProductInputEntity) async {
     emit(AddProductLoading());
-    var result = await imageRepo.uploadImage(addProductInputEntity.image);
+    try {
+      var result = await imageRepo.uploadImage(addProductInputEntity.image);
 
-    result.fold(
-      (f) {
-        emit(AddProductFailure(f.message));
-      },
-      (url) async{
-        addProductInputEntity.imageUrl = url;
+      result.fold(
+        (f) {
+          print("Image upload failed: ${f.message}");
+          emit(AddProductFailure(f.message));
+        },
+        (url) async {
+          print("Image uploaded successfully, URL = $url");
+          addProductInputEntity.imageUrl = url;
 
-        var result = await productsRepo.addProduct(addProductInputEntity);
+          try {
+            var result = await productsRepo.addProduct(addProductInputEntity);
 
-        result.fold(
-          (f) {
-            emit(AddProductFailure(f.message));
-          },
-          (r) {
-            emit(AddProductSuccess());
-          },
-        );
-      },
-    );
+            result.fold(
+              (f) {
+                print("Product add failed: ${f.message}");
+                emit(AddProductFailure(f.message));
+              },
+              (r) {
+                print("Product added successfully");
+                emit(AddProductSuccess());
+              },
+            );
+          } catch (e, st) {
+            print("Exception in productsRepo.addProduct: $e");
+            print(st);
+            emit(AddProductFailure("Unexpected error while adding product"));
+          }
+        },
+      );
+    } catch (e, st) {
+      print("Exception in imageRepo.uploadImage: $e");
+      print(st);
+      emit(AddProductFailure("Unexpected error while uploading image"));
+    }
   }
 }

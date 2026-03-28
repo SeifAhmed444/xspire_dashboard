@@ -19,8 +19,8 @@ class SupabaseStorageService implements StorageService {
       }
     }
     if (!isBucketExits) {
-  await _supabase.client.storage.createBucket(bucketName);
-}
+      await _supabase.client.storage.createBucket(bucketName);
+    }
   }
 
   static initSupabase() async {
@@ -37,9 +37,17 @@ class SupabaseStorageService implements StorageService {
     var result = await _supabase.client.storage
         .from('food_images')
         .upload('$path/$fileName.$extensionName', file);
-    final String publicUrl = _supabase.client.storage
-      .from('food_images')
-      .getPublicUrl('$path/$fileName.$extensionName');
-    return result;
+        try {
+      final String publicUrl = _supabase.client.storage
+          .from('food_images')
+          .getPublicUrl('$path/$fileName.$extensionName');
+      print("Public URL: $publicUrl");
+      return publicUrl;
+    } catch (e) {
+      print("Error getting public URL: $e");
+      rethrow;
+    }
   }
+
+
 }

@@ -13,7 +13,7 @@ class FireStorage implements StorageService {
       '$path/$fileName.$extensionName',
     );
     await fileReference.putFile(file);
-    var fileUrl = fileReference.getDownloadURL();
+    var fileUrl = await fileReference.getDownloadURL();
     return fileUrl;
   }
 }
