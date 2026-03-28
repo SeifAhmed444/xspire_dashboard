@@ -4,4 +4,5 @@ class BackendEndpoints {
   static const getUsersData = 'users';
   static const isUserExists = 'users';
   static const productCollection = 'products';
+  static const resturantCollection = 'resturants';
 }
