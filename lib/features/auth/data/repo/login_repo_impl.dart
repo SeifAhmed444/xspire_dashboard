@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:xspire_dashboard/constant.dart';
 import 'package:xspire_dashboard/core/errors/failures.dart';
 import 'package:xspire_dashboard/core/services/app_user.dart';
+import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dart';
 import 'package:xspire_dashboard/features/auth/domain/repo/login_repo.dart';
 
 final Map<String, String> emailAndPassword = {
@@ -14,6 +16,7 @@ class LoginRepoImpl implements LoginRepo {
     final savedPassword = emailAndPassword[email];
 
     if (savedPassword != null && savedPassword == password) {
+      Prefs.setBool(isloggedin, true);
       return right(
         AppUser(id: 'manual_${email.split('@').first}', email: email),
       );
