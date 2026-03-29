@@ -4,29 +4,29 @@ import 'package:xspire_dashboard/features/add_product/domain/entities/add_produc
 
 class AddProductInputModel {
   final String name;
-  final String description;
-  final num price;
-  final String code;
-  final bool isFeatured;
+  final String distance;
+  final String branches;
+  final bool isOpend;
+  final bool isAvailable;
   final File image;
   String? imageUrl;
 
   AddProductInputModel(
     {required this.name, 
-    required this.description, 
-    required this.price, 
-    required this.code, 
-    required this.isFeatured, 
+    required this.distance, 
+    required this.branches, 
+    required this.isOpend, 
+    required this.isAvailable, 
     required this.image, 
     this.imageUrl});
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity) {
     return AddProductInputModel(
       name: AddProductInputEntity.name,
-      description: AddProductInputEntity.description,
-      price: AddProductInputEntity.price,
-      code: AddProductInputEntity.code,
-      isFeatured: AddProductInputEntity.isFeatured,
+      distance: AddProductInputEntity.distance,
+      branches: AddProductInputEntity.branches,
+      isOpend: AddProductInputEntity.isOpend,
+      isAvailable: AddProductInputEntity.isAvailable,
       image: AddProductInputEntity.image,
       imageUrl: AddProductInputEntity.imageUrl,
     );
@@ -35,10 +35,10 @@ class AddProductInputModel {
   toJson() {
     return {
       'name': name,
-      'description': description,
-      'price': price,
-      'code': code,
-      'isFeatured': isFeatured,
+      'distance': distance,
+      'branches': branches,
+      'isOpend': isOpend,
+      'isAvailable': isAvailable,
       'imageUrl': imageUrl,
     };
   }

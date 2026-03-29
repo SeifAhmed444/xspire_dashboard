@@ -20,10 +20,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String name, code, description;
-  late num price;
+  late String name, branches, distance;
   File? image;
-  bool isFeatured = false;
+  bool isOpend = false;
+  bool isAvailable= false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,38 +39,37 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 onSaved: (value) {
                   name = value!;
                 },
-                hintText: 'Product Name',
+                hintText: 'Resturant Name',
                 textInputType: TextInputType.text,
               ),
+
               SizedBox(height: 16),
               CustomTextFormField(
                 onSaved: (value) {
-                  price = num.parse(value!);
+                  branches = value!;
                 },
-                hintText: 'Product Price ',
-                textInputType: TextInputType.number,
-              ),
-              SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (value) {
-                  code = value!.toLowerCase();
-                },
-                hintText: 'Product Code ',
+                hintText: 'Restaurant Branch',
                 textInputType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               CustomTextFormField(
                 onSaved: (value) {
-                  description = value!;
+                  distance = value!;
                 },
-                hintText: 'Product Description ',
+                hintText: 'Branch Distance',
                 textInputType: TextInputType.text,
                 maxLines: 5,
               ),
               const SizedBox(height: 16),
-              isFeaturedCheckBox.IsFeaturedCheckBox(
+              CheckBox.IsCheckBox(
                 onChanged: (value) {
-                  isFeatured = value;
+                isAvailable = value;
+                },
+              ),
+              const SizedBox(height: 16),
+              CheckBox.IsCheckBox(
+                onChanged: (value) {
+                  isOpend = value;
                 },
               ),
               const SizedBox(height: 16),
@@ -87,11 +86,11 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                       _formKey.currentState!.save();
                       AddProductInputEntity input = AddProductInputEntity(
                         name: name,
-                        description: description,
-                        price: price,
-                        code: code,
-                        isFeatured: isFeatured,
-                        image: image!,
+                        distance: distance,
+                        branches: branches,
+                        isAvailable: false,
+                        isOpend: false,
+                        image: image!, 
                       );
                       context.read<AddProductCubit>().addProduct(input);
 
