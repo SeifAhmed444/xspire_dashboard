@@ -10,6 +10,13 @@ abstract class DatabaseServies {
     String? docuementId,
     Map<String, dynamic>? query,
   });
+
+  Future<void> updateData({
+    required String path,
+    required String documentId,
+    required Map<String, dynamic> data,
+  });
+
   Future<bool> checkifDataExists({
     required String path,
     required String documentId,

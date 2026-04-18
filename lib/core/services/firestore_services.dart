@@ -3,6 +3,7 @@ import 'package:xspire_dashboard/core/services/database_services.dart';
 
 class FirestoreServices implements DatabaseServies {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+
   @override
   Future<void> addData({
     required String path,
@@ -10,18 +11,12 @@ class FirestoreServices implements DatabaseServies {
     String? documentId,
   }) async {
     try {
-      print("FirestoreServices: adding data to $path => $data");
-
       if (documentId != null) {
         await firestore.collection(path).doc(documentId).set(data);
       } else {
         await firestore.collection(path).add(data);
       }
-
-      print("FirestoreServices: data added successfully");
-    } catch (e, st) {
-      print("FirestoreServices error: $e");
-      print("StackTrace: $st");
+    } catch (e) {
       rethrow;
     }
   }
@@ -33,23 +28,39 @@ class FirestoreServices implements DatabaseServies {
     Map<String, dynamic>? query,
   }) async {
     if (docuementId != null) {
-      var data = await firestore.collection(path).doc(docuementId).get();
-      return data.data();
+      final doc = await firestore.collection(path).doc(docuementId).get();
+      return {'docId': doc.id, ...?doc.data()};
     } else {
-      Query<Map<String, dynamic>> data = firestore.collection(path);
+      Query<Map<String, dynamic>> ref = firestore.collection(path);
+
       if (query != null) {
         if (query['orderBy'] != null) {
-          var orderByField = query['orderBy'];
-          var descending = query['descending'];
-          data = data.orderBy(orderByField, descending: descending);
+          ref = ref.orderBy(
+            query['orderBy'],
+            descending: query['descending'] ?? false,
+          );
         }
         if (query['limit'] != null) {
-          var limit = query['limit'];
-          data = data.limit(limit);
+          ref = ref.limit(query['limit']);
         }
       }
-      var result = await data.get();
-      return result.docs.map((e) => e.data()).toList();
+
+      final result = await ref.get();
+      // include docId inside every document map
+      return result.docs.map((e) => {'docId': e.id, ...e.data()}).toList();
+    }
+  }
+
+  @override
+  Future<void> updateData({
+    required String path,
+    required String documentId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      await firestore.collection(path).doc(documentId).update(data);
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -58,7 +69,7 @@ class FirestoreServices implements DatabaseServies {
     required String path,
     required String documentId,
   }) async {
-    var data = await firestore.collection(path).doc(documentId).get();
-    return data.exists;
+    final doc = await firestore.collection(path).doc(documentId).get();
+    return doc.exists;
   }
 }
