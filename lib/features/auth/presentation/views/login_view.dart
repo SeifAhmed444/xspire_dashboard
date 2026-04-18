@@ -10,13 +10,66 @@ import 'package:xspire_dashboard/features/auth/presentation/views/widgets/login_
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
   static const routeName = 'LoginView';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: BlocProvider(
-          create: (context) => LoginCubit(getIt.get<LoginRepo>()),
-          child: const LoginViewBodyBlocConsumer(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFFAFAFA),
+              const Color(0xFFF0F4F3).withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative circles
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF1F5E3B).withOpacity(0.1),
+                      const Color(0xFF1F5E3B).withOpacity(0.05),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -150,
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFF4A91F).withOpacity(0.08),
+                      const Color(0xFFF4A91F).withOpacity(0.03),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Login content
+            Center(
+              child: BlocProvider(
+                create: (context) => LoginCubit(getIt.get<LoginRepo>()),
+                child: const LoginViewBodyBlocConsumer(),
+              ),
+            ),
+          ],
         ),
       ),
     );
