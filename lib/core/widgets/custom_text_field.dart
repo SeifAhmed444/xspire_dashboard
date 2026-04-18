@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:xspire_dashboard/core/utils/app_text_style.dart';
 
 class CustomTextFormField extends StatefulWidget {
@@ -13,6 +12,7 @@ class CustomTextFormField extends StatefulWidget {
     this.obscureText = false,
     this.prefixIcon,
     this.validator,
+    this.controller,  // ← added
   });
 
   final String hintText;
@@ -23,6 +23,7 @@ class CustomTextFormField extends StatefulWidget {
   final bool obscureText;
   final Widget? prefixIcon;
   final String? Function(String?)? validator;
+  final TextEditingController? controller; // ← added
 
   @override
   State<CustomTextFormField> createState() => _CustomTextFormFieldState();
@@ -46,12 +47,12 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      controller: widget.controller, // ← added
       maxLines: widget.maxLines,
       obscureText: widget.obscureText,
       onSaved: widget.onSaved,
       focusNode: _focusNode,
-      validator:
-          widget.validator ??
+      validator: widget.validator ??
           (value) {
             if (value == null || value.isEmpty) {
               return 'هذا الحقل مطلوب';

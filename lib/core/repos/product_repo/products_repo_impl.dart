@@ -7,10 +7,12 @@ import 'package:xspire_dashboard/features/add_product/data/models/add_product_in
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 
 class ProductsRepoImpl implements ProductsRepo {
-  @override
   final DatabaseServies databaseServies;
 
   ProductsRepoImpl(this.databaseServies);
+
+  // ── Add ──────────────────────────────────────────────────────────────────
+  @override
   Future<Either<Failure, void>> addProduct(
     AddProductInputEntity addProductInputEntity,
   ) async {
@@ -22,6 +24,46 @@ class ProductsRepoImpl implements ProductsRepo {
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure('Failed to add product'));
+    }
+  }
+
+  // ── Get All ───────────────────────────────────────────────────────────────
+  @override
+  Future<Either<Failure, List<AddProductInputEntity>>> getProducts() async {
+    try {
+      final data = await databaseServies.getData(
+        path: BackendEndpoints.productCollection,
+      );
+
+      final List<AddProductInputEntity> products = (data as List)
+          .map(
+            (item) => AddProductInputModel.fromJson(
+              item as Map<String, dynamic>,
+            ).toEntity(),
+          )
+          .toList();
+
+      return Right(products);
+    } catch (e) {
+      return Left(ServerFailure('Failed to fetch products'));
+    }
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+  @override
+  Future<Either<Failure, void>> updateProduct(
+    String docId,
+    AddProductInputEntity addProductInputEntity,
+  ) async {
+    try {
+      await databaseServies.updateData(
+        path: BackendEndpoints.productCollection,
+        documentId: docId,
+        data: AddProductInputModel.fromEntity(addProductInputEntity).toJson(),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure('Failed to update product'));
     }
   }
 }
