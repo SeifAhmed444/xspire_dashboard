@@ -5,6 +5,8 @@ import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dar
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 import 'package:xspire_dashboard/features/products/presentation/views/edit_product_view.dart';
 import 'package:xspire_dashboard/features/products/presentation/views/products_list_view.dart';
+import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
+
 
 Route<dynamic> onGenerateRoutes(RouteSettings settings) {
   switch (settings.name) {
@@ -27,12 +29,18 @@ Route<dynamic> onGenerateRoutes(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (_) => const ProductsListView(),
       );
+      
+    case ManageDataView.routeName:
+      return MaterialPageRoute(
+        builder: (_) => const ManageDataView()
+      );
 
     case EditProductView.routeName:
       final product = settings.arguments as AddProductInputEntity;
       return MaterialPageRoute(
         builder: (_) => EditProductView(product: product),
       );
+
 
     default:
       return MaterialPageRoute(
