@@ -15,7 +15,7 @@ class AddProductView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar('Add Restaurant'),
+      appBar: buildAppBar('Add Data'),
       body: BlocProvider(
         create: (context) => AddProductCubit(
           getIt.get<ImageRepo>(),
