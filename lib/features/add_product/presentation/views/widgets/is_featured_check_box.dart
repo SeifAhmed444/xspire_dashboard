@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:xspire_dashboard/core/utils/app_text_style.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/custom_check_box.dart';
 
 class CheckBox extends StatefulWidget {
-  const CheckBox.IsCheckBox({super.key, required this.onChanged});
+  // Added a required `label` parameter so callers can distinguish the two
+  // checkboxes ("Is available" vs "Is open").
+  const CheckBox.IsCheckBox({
+    super.key,
+    required this.onChanged,
+    this.label = 'Is available',
+  });
 
   final ValueChanged<bool> onChanged;
+  final String label;
+
   @override
   State<CheckBox> createState() => _CheckBoxState();
 }
 
 class _CheckBoxState extends State<CheckBox> {
-  bool isTermsAccepted = false;
-  
+  bool _isChecked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +29,7 @@ class _CheckBoxState extends State<CheckBox> {
           TextSpan(
             children: [
               TextSpan(
-                text: 'Is available',
+                text: widget.label,
                 style: TextStyles.semiBold13.copyWith(
                   color: const Color(0xFF949D9E),
                 ),
@@ -35,11 +41,10 @@ class _CheckBoxState extends State<CheckBox> {
         const Spacer(flex: 25),
         CustomCheckBox(
           onChecked: (value) {
-            isTermsAccepted = value;
+            setState(() => _isChecked = value);
             widget.onChanged(value);
-            setState(() {});
           },
-          isChecked: isTermsAccepted,
+          isChecked: _isChecked,
         ),
         Expanded(child: const SizedBox(width: 16)),
       ],

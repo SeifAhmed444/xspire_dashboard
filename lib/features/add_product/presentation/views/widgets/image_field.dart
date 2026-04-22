@@ -6,29 +6,29 @@ import 'package:skeletonizer/skeletonizer.dart';
 class ImageField extends StatefulWidget {
   const ImageField({super.key, required this.onFileChange});
   final ValueChanged<File?> onFileChange;
+
   @override
   State<ImageField> createState() => _ImageFieldState();
 }
 
-bool isLoading = false;
-File? fileImage;
-
 class _ImageFieldState extends State<ImageField> {
+  // Moved inside state — no longer global/shared between instances
+  bool _isLoading = false;
+  File? _fileImage;
+
   @override
   Widget build(BuildContext context) {
     return Skeletonizer(
-      enabled: isLoading,
+      enabled: _isLoading,
       child: GestureDetector(
         onTap: () async {
-          isLoading = true;
-          setState(() {});
+          setState(() => _isLoading = true);
           try {
-            await pickImage();
-          } on Exception {
-            // TODO
+            await _pickImage();
+          } on Exception catch (_) {
+            // handle silently
           } finally {
-            isLoading = false;
-            setState(() {});
+            setState(() => _isLoading = false);
           }
         },
         child: Stack(
@@ -39,23 +39,21 @@ class _ImageFieldState extends State<ImageField> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.grey),
               ),
-              child: fileImage != null
+              child: _fileImage != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.file(fileImage!),
+                      child: Image.file(_fileImage!),
                     )
-                  : Icon(Icons.image_outlined, size: 200),
+                  : const Icon(Icons.image_outlined, size: 200),
             ),
-
             Visibility(
-              visible: fileImage != null,
+              visible: _fileImage != null,
               child: IconButton(
                 onPressed: () {
-                  fileImage = null;
-                  widget.onFileChange(fileImage);
-                  setState(() {});
+                  setState(() => _fileImage = null);
+                  widget.onFileChange(null);
                 },
-                icon: Icon(Icons.close, color: Colors.red),
+                icon: const Icon(Icons.close, color: Colors.red),
               ),
             ),
           ],
@@ -64,7 +62,7 @@ class _ImageFieldState extends State<ImageField> {
     );
   }
 
-  Future<void> pickImage() async {
+  Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -73,7 +71,7 @@ class _ImageFieldState extends State<ImageField> {
       return;
     }
 
-    fileImage = File(image.path);
-    widget.onFileChange(fileImage);
+    setState(() => _fileImage = File(image.path));
+    widget.onFileChange(_fileImage);
   }
 }

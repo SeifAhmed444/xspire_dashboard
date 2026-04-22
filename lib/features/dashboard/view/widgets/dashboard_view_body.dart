@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xspire_dashboard/constant.dart';
 import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dart';
+import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/core/widgets/special_logout_button.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/add_product_view.dart';
@@ -15,7 +16,7 @@ class DashboardViewBody extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
         slivers: [
-          // ── Sliver App Bar ──────────────────────────────────────────
+          // ── Sliver App Bar ──────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 190,
             pinned: true,
@@ -105,14 +106,12 @@ class DashboardViewBody extends StatelessWidget {
             ),
           ),
 
-          // ── Body ────────────────────────────────────────────────────
+          // ── Body ────────────────────────────────────────────────────────
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 8),
-
-                // ── Quick Actions ──
                 const Text(
                   'Quick Actions',
                   style: TextStyle(
@@ -122,7 +121,6 @@ class DashboardViewBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 Row(
                   children: [
                     Expanded(
@@ -156,21 +154,25 @@ class DashboardViewBody extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 32),
 
-                // ── Logout ──
+                // ── Logout ──────────────────────────────────────────────
                 SpecialLogoutButton(
-                  onPressed: () {
-                    Prefs.setBool(isloggedin, false);
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      'LoginView',
-                      (route) => false,
-                    );
+                  onPressed: () async {
+                    // Clear both the login flag AND the persisted email
+                    await Prefs.setBool(isloggedin, false);
+                    await Prefs.clearEmail();
+                    UserSession.instance.clear();
+
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        'LoginView',
+                        (route) => false,
+                      );
+                    }
                   },
                 ),
-
                 const SizedBox(height: 20),
               ]),
             ),

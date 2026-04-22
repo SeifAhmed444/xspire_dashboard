@@ -4,16 +4,16 @@ import 'package:path/path.dart' as b;
 import 'package:xspire_dashboard/core/services/storage_service.dart';
 
 class FireStorage implements StorageService {
-  final StorageReferance = FirebaseStorage.instance.ref();
+  final storageReference = FirebaseStorage.instance.ref();
+
   @override
   Future<String> uploadFile(File file, String path) async {
-    String fileName = b.basename(file.path);
-    String extensionName = b.extension(file.path);
-    var fileReference = StorageReferance.child(
-      '$path/$fileName.$extensionName',
-    );
+    // Use basename WITHOUT appending extension again — basename already
+    // includes the extension (e.g. "photo.jpg").
+    final String fileName = b.basename(file.path);
+    final fileReference = storageReference.child('$path/$fileName');
     await fileReference.putFile(file);
-    var fileUrl = await fileReference.getDownloadURL();
+    final fileUrl = await fileReference.getDownloadURL();
     return fileUrl;
   }
 }

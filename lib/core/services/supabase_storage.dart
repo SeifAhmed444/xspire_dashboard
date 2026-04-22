@@ -7,23 +7,15 @@ import 'package:xspire_dashboard/core/utils/supabase_key.dart';
 class SupabaseStorageService implements StorageService {
   static late Supabase _supabase;
 
-  static createBuckets(String bucketName) async {
-    var buckets = await _supabase.client.storage.listBuckets();
-
-    bool isBucketExits = false;
-
-    for (var buckete in buckets) {
-      if (buckete.id == bucketName) {
-        isBucketExits = true;
-        break;
-      }
-    }
-    if (!isBucketExits) {
+  static Future<void> createBuckets(String bucketName) async {
+    final buckets = await _supabase.client.storage.listBuckets();
+    final exists = buckets.any((b) => b.id == bucketName);
+    if (!exists) {
       await _supabase.client.storage.createBucket(bucketName);
     }
   }
 
-  static initSupabase() async {
+  static Future<void> initSupabase() async {
     _supabase = await Supabase.initialize(
       url: SupabaseKey.KSupabaseUrl,
       anonKey: SupabaseKey.KSupabaseKey,
@@ -32,22 +24,21 @@ class SupabaseStorageService implements StorageService {
 
   @override
   Future<String> uploadFile(File file, String path) async {
-    String fileName = b.basename(file.path);
-    String extensionName = b.extension(file.path);
+    // basename already contains the extension — do NOT append it again.
+    final String fileName = b.basename(file.path);
+    final String uploadPath = '$path/$fileName';
+
     await _supabase.client.storage
         .from('food_images')
-        .upload('$path/$fileName.$extensionName', file);
-        try {
+        .upload(uploadPath, file);
+
+    try {
       final String publicUrl = _supabase.client.storage
           .from('food_images')
-          .getPublicUrl('$path/$fileName.$extensionName');
-      print("Public URL: $publicUrl");
+          .getPublicUrl(uploadPath);
       return publicUrl;
     } catch (e) {
-      print("Error getting public URL: $e");
       rethrow;
     }
   }
-
-
 }

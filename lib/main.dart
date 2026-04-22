@@ -7,6 +7,7 @@ import 'package:xspire_dashboard/core/services/custom_bolc_observer.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dart';
 import 'package:xspire_dashboard/core/services/supabase_storage.dart';
+import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 import 'package:xspire_dashboard/firebase_options.dart';
@@ -19,19 +20,31 @@ void main() async {
   Bloc.observer = CustomBlocObserver();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   setupGetIt();
+
+  // ── Restore UserSession from SharedPreferences ──────────────────────────
+  // If the user was previously logged in, we must restore the session so that
+  // UserSession.instance.currentEmail / currentUserId don't assert-crash.
+  final isLoggedIn = Prefs.getBool(isloggedin);
+  if (isLoggedIn) {
+    final savedEmail = Prefs.getSavedEmail();
+    if (savedEmail != null && savedEmail.isNotEmpty) {
+      final userId = 'manual_${savedEmail.split('@').first}';
+      UserSession.instance.setUser(savedEmail, userId: userId);
+    }
+  }
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final islogin = Prefs.getBool(isloggedin);
+    final isLoggedIn = Prefs.getBool(isloggedin) && UserSession.instance.isLoggedIn;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: islogin ? DashboardView.routeName : LoginView.routeName,
+      initialRoute: isLoggedIn ? DashboardView.routeName : LoginView.routeName,
       onGenerateRoute: onGenerateRoutes,
       theme: _buildAppTheme(),
     );
@@ -41,20 +54,14 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-
-      // Primary Color
       primaryColor: const Color(0xFF1F5E3B),
       scaffoldBackgroundColor: const Color(0xFFFAFAFA),
-
-      // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: Color(0xFF1F5E3B),
         secondary: Color(0xFFF4A91F),
         surface: Color(0xFFFFFBF5),
         error: Color(0xFFE53935),
       ),
-
-      // App Bar Theme
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1F5E3B),
         foregroundColor: Color(0xFFFFFFFF),
@@ -66,8 +73,6 @@ class MyApp extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-
-      // Text Theme
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 28,
@@ -100,8 +105,6 @@ class MyApp extends StatelessWidget {
           color: Color(0xFF9E9E9E),
         ),
       ),
-
-      // Button Themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1F5E3B),
@@ -113,15 +116,13 @@ class MyApp extends StatelessWidget {
           elevation: 4,
         ),
       ),
-
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF1F5E3B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-
-      // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF9FAFA),
@@ -135,27 +136,25 @@ class MyApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1F5E3B), width: 2),
+          borderSide:
+              const BorderSide(color: Color(0xFF1F5E3B), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE53935)),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: const TextStyle(
           color: Color(0xFF949D9E),
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
       ),
-
-      // Card Theme
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: Colors.white,
       ),
     );
