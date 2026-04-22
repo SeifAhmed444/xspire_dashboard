@@ -1,115 +1,84 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:xspire_dashboard/core/repos/image_repo/image_repo.dart';
-import 'package:xspire_dashboard/core/repos/product_repo/products_repo.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
-import 'package:xspire_dashboard/core/widgets/custom_button.dart';
-import 'package:xspire_dashboard/core/widgets/custom_modal_progress_hub.dart';
-import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
-import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
-import 'package:xspire_dashboard/features/add_product/presentation/manager/cubit/add_product_cubit.dart';
-import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/image_field.dart';
+import 'package:xspire_dashboard/features/products/domain/entities/product_entity.dart';
+import 'package:xspire_dashboard/features/products/domain/usecases/add_product_usecase.dart';
+import 'package:xspire_dashboard/features/products/domain/usecases/delete_product_usecase.dart';
+import 'package:xspire_dashboard/features/products/domain/usecases/get_products_usecase.dart';
+import 'package:xspire_dashboard/features/products/domain/usecases/update_product_usecase.dart';
+import 'package:xspire_dashboard/features/products/presentation/cubit/product_cubit.dart';
 
 class EditProductView extends StatelessWidget {
   const EditProductView({super.key, required this.product});
   static const routeName = 'edit_product';
-
-  final AddProductInputEntity product;
+  final ProductEntity product;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AddProductCubit(
-        getIt.get<ImageRepo>(),
-        getIt.get<ProductsRepo>(),
+      create: (_) => ProductCubit(
+        addProductUseCase: getIt<AddProductUseCase>(),
+        getProductsUseCase: getIt<GetProductsUseCase>(),
+        updateProductUseCase: getIt<UpdateProductUseCase>(),
+        deleteProductUseCase: getIt<DeleteProductUseCase>(),
       ),
-      child: _EditProductConsumer(product: product),
-    );
-  }
-}
-
-// ── BlocConsumer wrapper ──────────────────────────────────────────────────────
-class _EditProductConsumer extends StatelessWidget {
-  const _EditProductConsumer({required this.product});
-  final AddProductInputEntity product;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<AddProductCubit, AddProductState>(
-      listener: (context, state) {
-        if (state is UpdateProductSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+      child: BlocConsumer<ProductCubit, ProductState>(
+        listener: (context, state) {
+          if (state is UpdateProductSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(children: [
+                  Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
                   SizedBox(width: 10),
-                  Text('Restaurant updated successfully!'),
-                ],
+                  Text('Product updated successfully!'),
+                ]),
+                backgroundColor: AppColors.successColor,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              backgroundColor: AppColors.successColor,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            );
+            Navigator.pop(context, true);
+          }
+          if (state is ProductError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.errorColor,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            ),
-          );
-          Navigator.pop(context, true); // return true → list will refresh
-        }
-
-        if (state is AddProductFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errMessage),
-              backgroundColor: AppColors.errorColor,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        }
-      },
-      builder: (context, state) {
-        return CustomModalProgressHUD(
-          inAsyncCall: state is AddProductLoading,
-          child: Scaffold(
+            );
+          }
+        },
+        builder: (context, state) {
+          return Scaffold(
             backgroundColor: const Color(0xFFF5F7F5),
             appBar: AppBar(
               backgroundColor: AppColors.primaryColor,
               foregroundColor: Colors.white,
               elevation: 0,
               centerTitle: true,
-              title: const Text(
-                'Edit Restaurant',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              title: const Text('Edit Product',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            body: _EditProductForm(product: product),
-          ),
-        );
-      },
+            body: state is ProductLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
+                : _EditProductForm(product: product),
+          );
+        },
+      ),
     );
   }
 }
 
-// ── Form ──────────────────────────────────────────────────────────────────────
 class _EditProductForm extends StatefulWidget {
   const _EditProductForm({required this.product});
-  final AddProductInputEntity product;
+  final ProductEntity product;
 
   @override
   State<_EditProductForm> createState() => _EditProductFormState();
@@ -120,36 +89,25 @@ class _EditProductFormState extends State<_EditProductForm> {
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   late final TextEditingController _nameController;
-  late final TextEditingController _branchesController;
-  late final TextEditingController _distanceController;
-
-  late String name;
-  late String branches;
-  late String distance;
-  late bool isOpend;
-  late bool isAvailable;
-  File? newImage;
+  late final TextEditingController _descController;
+  late final TextEditingController _priceController;
+  late final TextEditingController _imageUrlController;
 
   @override
   void initState() {
     super.initState();
-    // pre-fill from existing product
-    name = widget.product.name;
-    branches = widget.product.branches;
-    distance = widget.product.distance;
-    isOpend = widget.product.isOpend;
-    isAvailable = widget.product.isAvailable;
-
     _nameController = TextEditingController(text: widget.product.name);
-    _branchesController = TextEditingController(text: widget.product.branches);
-    _distanceController = TextEditingController(text: widget.product.distance);
+    _descController = TextEditingController(text: widget.product.description);
+    _priceController = TextEditingController(text: widget.product.price.toString());
+    _imageUrlController = TextEditingController(text: widget.product.imageUrl);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _branchesController.dispose();
-    _distanceController.dispose();
+    _descController.dispose();
+    _priceController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -158,12 +116,8 @@ class _EditProductFormState extends State<_EditProductForm> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // ── Current image header ──
-          _ImageHeader(
-            imageUrl: widget.product.imageUrl,
-            name: widget.product.name,
-          ),
-
+          // Image header with current image
+          _ImageHeader(imageUrl: widget.product.imageUrl, name: widget.product.name),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Form(
@@ -172,91 +126,37 @@ class _EditProductFormState extends State<_EditProductForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Basic Info ──
-                  _SectionTitle(title: 'Basic Information'),
-                  const SizedBox(height: 12),
-
-                  CustomTextFormField(
-                    controller: _nameController,
-                    hintText: 'Restaurant Name',
-                    textInputType: TextInputType.text,
-                    onSaved: (v) => name = v ?? '',
-                    prefixIcon: const Icon(
-                      Icons.restaurant_rounded,
-                      color: AppColors.primaryColor,
-                      size: 20,
-                    ),
+                  _buildSectionTitle('Edit Details'),
+                  const SizedBox(height: 16),
+                  _buildField(controller: _nameController, label: 'Product Name', hint: 'e.g. Margherita Pizza', icon: Icons.label_outline_rounded,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null),
+                  const SizedBox(height: 14),
+                  _buildField(controller: _descController, label: 'Description', hint: 'Describe the product...', icon: Icons.description_outlined, maxLines: 3,
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Description is required' : null),
+                  const SizedBox(height: 14),
+                  _buildField(
+                    controller: _priceController, label: 'Price (EGP)', hint: 'e.g. 149.99',
+                    icon: Icons.attach_money_rounded,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Price is required';
+                      if (double.tryParse(v.trim()) == null) return 'Enter a valid number';
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 12),
-
-                  CustomTextFormField(
-                    controller: _branchesController,
-                    hintText: 'Number of Branches',
-                    textInputType: TextInputType.number,
-                    onSaved: (v) => branches = v ?? '',
-                    prefixIcon: const Icon(
-                      Icons.store_mall_directory_outlined,
-                      color: AppColors.primaryColor,
-                      size: 20,
-                    ),
+                  const SizedBox(height: 14),
+                  _buildField(
+                    controller: _imageUrlController, label: 'Image URL', hint: 'https://example.com/image.jpg',
+                    icon: Icons.image_outlined,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Image URL is required';
+                      final uri = Uri.tryParse(v.trim());
+                      if (uri == null || !uri.hasAbsolutePath) return 'Enter a valid URL';
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 12),
-
-                  CustomTextFormField(
-                    controller: _distanceController,
-                    hintText: 'Branch Distance',
-                    textInputType: TextInputType.text,
-                    onSaved: (v) => distance = v ?? '',
-                    prefixIcon: const Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.primaryColor,
-                      size: 20,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ── Status ──
-                  _SectionTitle(title: 'Status'),
-                  const SizedBox(height: 12),
-
-                  _ToggleRow(
-                    label: 'Is Available',
-                    value: isAvailable,
-                    onChanged: (v) => setState(() => isAvailable = v),
-                  ),
-                  const SizedBox(height: 10),
-                  _ToggleRow(
-                    label: 'Is Open',
-                    value: isOpend,
-                    onChanged: (v) => setState(() => isOpend = v),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ── Update Image ──
-                  _SectionTitle(title: 'Update Image'),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Leave empty to keep the current image',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ImageField(
-                    onFileChange: (file) => newImage = file,
-                  ),
-
                   const SizedBox(height: 28),
-
-                  // ── Save Button ──
-                  CustomButton(
-                    onPressed: _onSave,
-                    text: 'Save Changes',
-                    useGradient: true,
-                    fontSize: 16,
-                  ),
-
+                  _buildSubmitButton(context),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -267,28 +167,80 @@ class _EditProductFormState extends State<_EditProductForm> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(width: 4, height: 20, decoration: BoxDecoration(color: AppColors.primaryColor, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 10),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+      ],
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller, required String label, required String hint,
+    required IconData icon, int maxLines = 1, TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF424242))),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller, maxLines: maxLines, keyboardType: keyboardType, validator: validator,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Icon(icon, size: 20, color: AppColors.primaryColor)),
+            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+            filled: true, fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE0E0E0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE0E0E0))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryColor, width: 2)),
+            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.errorColor)),
+            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.errorColor, width: 2)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity, height: 52,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: AppColors.primaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+          icon: const Icon(Icons.save_rounded, color: Colors.white),
+          label: const Text('Save Changes', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+          onPressed: _onSave,
+        ),
+      ),
+    );
+  }
+
   void _onSave() {
     if (!_formKey.currentState!.validate()) {
       setState(() => _autovalidateMode = AutovalidateMode.always);
       return;
     }
-    _formKey.currentState!.save();
 
-    final updatedEntity = AddProductInputEntity(
-      docId: widget.product.docId,
-      name: name,
-      branches: branches,
-      distance: distance,
-      isOpend: isOpend,
-      isAvailable: isAvailable,
-      image: newImage,                   // null = keep old image
-      imageUrl: widget.product.imageUrl, // fallback to existing url
+    final updated = ProductEntity(
+      id: widget.product.id,
+      name: _nameController.text.trim(),
+      description: _descController.text.trim(),
+      price: double.parse(_priceController.text.trim()),
+      imageUrl: _imageUrlController.text.trim(),
+      userId: widget.product.userId,
+      createdAt: widget.product.createdAt,
     );
 
-    context.read<AddProductCubit>().updateProduct(
-          widget.product.docId ?? '',
-          updatedEntity,
-        );
+    context.read<ProductCubit>().updateProduct(widget.product.id!, updated);
   }
 }
 
@@ -303,143 +255,36 @@ class _ImageHeader extends StatelessWidget {
     return Stack(
       children: [
         SizedBox(
-          height: 220,
-          width: double.infinity,
+          height: 200, width: double.infinity,
           child: imageUrl != null && imageUrl!.isNotEmpty
-              ? Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _fallback(),
-                )
+              ? Image.network(imageUrl!, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _fallback())
               : _fallback(),
         ),
-        // dark gradient overlay
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.55),
-                ],
+                begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
               ),
             ),
           ),
         ),
-        // name label
         Positioned(
-          bottom: 16,
-          left: 20,
-          right: 20,
-          child: Text(
-            name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              shadows: [Shadow(color: Colors.black45, blurRadius: 8)],
-            ),
-          ),
+          bottom: 16, left: 20, right: 20,
+          child: Text(name,
+              style: const TextStyle(color: Colors.white, fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 8)])),
         ),
       ],
     );
   }
 
-  Widget _fallback() {
-    return Container(
-      color: const Color(0xFFF0F4F3),
-      child: Icon(
-        Icons.restaurant_rounded,
-        size: 64,
-        color: AppColors.primaryColor.withOpacity(0.25),
-      ),
-    );
-  }
-}
-
-// ── Section Title ─────────────────────────────────────────────────────────────
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 18,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Toggle Row ────────────────────────────────────────────────────────────────
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: value
-              ? AppColors.primaryColor.withOpacity(0.3)
-              : const Color(0xFFEEEEEE),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            value
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
-            color: value ? AppColors.primaryColor : Colors.grey,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: value ? AppColors.primaryColor : Colors.grey[600],
-            ),
-          ),
-          const Spacer(),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.primaryColor,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _fallback() => Container(
+        color: const Color(0xFFF0F4F3),
+        child: Icon(Icons.image_not_supported_rounded, size: 64,
+            color: AppColors.primaryColor.withOpacity(0.2)),
+      );
 }
