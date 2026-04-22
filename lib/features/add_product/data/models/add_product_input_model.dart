@@ -7,9 +7,10 @@ class AddProductInputModel {
   final String branches;
   final bool isOpend;
   final bool isAvailable;
-  final File? image;        // nullable — no file when loading from Firestore
+  final File? image;        
   String? imageUrl;
-  String? docId;            // Firestore document ID
+  String? docId;    
+  String? userEmail;        
 
   AddProductInputModel({
     required this.name,
@@ -19,7 +20,9 @@ class AddProductInputModel {
     required this.isAvailable,
     this.image,
     this.imageUrl,
-    this.docId,
+    this.docId, 
+    String? userEmail,
+
   });
 
   // From entity (used when saving)
@@ -33,6 +36,8 @@ class AddProductInputModel {
       image: entity.image,
       imageUrl: entity.imageUrl,
       docId: entity.docId,
+
+      
     );
   }
 
@@ -46,6 +51,7 @@ class AddProductInputModel {
       isOpend: json['isOpend'] as bool? ?? false,
       isAvailable: json['isAvailable'] as bool? ?? false,
       imageUrl: json['imageUrl'] as String?,
+      userEmail: json['userEmail'] as String?,
     );
   }
 
@@ -71,6 +77,7 @@ class AddProductInputModel {
       'isOpend': isOpend,
       'isAvailable': isAvailable,
       'imageUrl': imageUrl,
+      'userEmail': userEmail,
     };
   }
 }

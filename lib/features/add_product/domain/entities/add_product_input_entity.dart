@@ -4,11 +4,12 @@ class AddProductInputEntity {
   final String name;
   final String distance;
   final String branches;
-  final bool isOpend;
+  bool isOpend;
   final bool isAvailable;
   final File? image;
   String? imageUrl;
   String? docId;
+  String? userEmail;
 
   AddProductInputEntity({
     required this.name,
@@ -19,5 +20,6 @@ class AddProductInputEntity {
     this.image,
     this.imageUrl,
     this.docId,
+    this.userEmail,
   });
 }
