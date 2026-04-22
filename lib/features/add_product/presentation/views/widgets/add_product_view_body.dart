@@ -22,7 +22,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   late String name, branches, distance;
   File? image;
   bool isOpend = false;
-  bool isAvailable= false;
+  bool isAvailable = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,48 +34,39 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
           autovalidateMode: autovalidateMode,
           child: Column(
             children: [
+              const SizedBox(height: 16),
               CustomTextFormField(
-                onSaved: (value) {
-                  name = value!;
-                },
-                hintText: 'Resturant Name',
+                onSaved: (value) => name = value!,
+                hintText: 'Restaurant Name',
                 textInputType: TextInputType.text,
               ),
-
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               CustomTextFormField(
-                onSaved: (value) {
-                  branches = value!;
-                },
+                onSaved: (value) => branches = value!,
                 hintText: 'Restaurant Branch',
                 textInputType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               CustomTextFormField(
-                onSaved: (value) {
-                  distance = value!;
-                },
+                onSaved: (value) => distance = value!,
                 hintText: 'Branch Distance',
                 textInputType: TextInputType.text,
-                maxLines: 5,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 16),
+              // Fix: pass correct labels and capture correct values
+              CheckBox.IsCheckBox(
+                label: 'Is Available',
+                onChanged: (value) => isAvailable = value,
               ),
               const SizedBox(height: 16),
               CheckBox.IsCheckBox(
-                onChanged: (value) {
-                isAvailable = value;
-                },
-              ),
-              const SizedBox(height: 16),
-              CheckBox.IsCheckBox(
-                onChanged: (value) {
-                  isOpend = value;
-                },
+                label: 'Is Open',
+                onChanged: (value) => isOpend = value,
               ),
               const SizedBox(height: 16),
               ImageField(
-                onFileChange: (image) {
-                  this.image = image;
-                },
+                onFileChange: (file) => image = file,
               ),
               const SizedBox(height: 16),
               CustomButton(
@@ -83,25 +74,26 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   if (image != null) {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      AddProductInputEntity input = AddProductInputEntity(
+                      // Fix: pass the actual checkbox values instead of
+                      // hardcoded false
+                      final input = AddProductInputEntity(
                         name: name,
                         distance: distance,
                         branches: branches,
-                        isAvailable: false,
-                        isOpend: false,
-                        image: image!, 
+                        isAvailable: isAvailable,
+                        isOpend: isOpend,
+                        image: image!,
                       );
                       context.read<AddProductCubit>().addProduct(input);
-
                     } else {
-                      autovalidateMode = AutovalidateMode.always;
-                      setState(() {});
+                      setState(
+                          () => autovalidateMode = AutovalidateMode.always);
                     }
                   } else {
-                    showError(context);
+                    _showImageError(context);
                   }
                 },
-                text: 'Add Product',
+                text: 'Add Restaurant',
               ),
               const SizedBox(height: 16),
             ],
@@ -110,8 +102,8 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
       ),
     );
   }
-  
-  void showError(BuildContext context) {
+
+  void _showImageError(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Please select an image'),

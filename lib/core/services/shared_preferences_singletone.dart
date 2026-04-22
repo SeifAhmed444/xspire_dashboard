@@ -1,20 +1,15 @@
 import 'package:flutter/foundation.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
   static late SharedPreferences _preferences;
 
-  // ValueNotifier for notification count
   static final ValueNotifier<int> notificationNotifier = ValueNotifier<int>(0);
-  static final ValueNotifier<bool> notificationNotifier2 = ValueNotifier<bool>(
-    false,
-  );
+  static final ValueNotifier<bool> notificationNotifier2 =
+      ValueNotifier<bool>(false);
+
   static Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
-
-    // // Initialize notifier with saved value
-    // notificationNotifier.value = _preferences.getInt(Knotification) ?? 0;
   }
 
   static Future<void> setBool(String key, bool value) async {
@@ -23,5 +18,21 @@ class Prefs {
 
   static bool getBool(String key) {
     return _preferences.getBool(key) ?? false;
+  }
+
+  // ── Email persistence ───────────────────────────────────────────────────────
+  // Saves the logged-in user's email so it can be restored after a cold start.
+  static const _kSavedEmail = 'saved_email';
+
+  static Future<void> saveEmail(String email) async {
+    await _preferences.setString(_kSavedEmail, email);
+  }
+
+  static String? getSavedEmail() {
+    return _preferences.getString(_kSavedEmail);
+  }
+
+  static Future<void> clearEmail() async {
+    await _preferences.remove(_kSavedEmail);
   }
 }

@@ -1,5 +1,3 @@
-// lib/features/manage_data/presentation/views/manage_data_view.dart
-// امسحهم
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/get_local_data_usecase.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/delete_local_data_usecase.dart';
@@ -17,9 +15,9 @@ class ManageDataView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ManageDataCubit(
-         getLocalDataUseCase: getIt.get<GetLocalDataUseCase>(),
-          deleteLocalDataUseCase: getIt.get<DeleteLocalDataUseCase>(),
-        )..loadLocalData(),
+        getLocalDataUseCase: getIt.get<GetLocalDataUseCase>(),
+        deleteLocalDataUseCase: getIt.get<DeleteLocalDataUseCase>(),
+      )..loadLocalData(),
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7F5),
         appBar: AppBar(
