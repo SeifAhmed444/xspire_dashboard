@@ -33,17 +33,22 @@ class FirestoreServices implements DatabaseServies {
     } else {
       Query<Map<String, dynamic>> ref = firestore.collection(path);
 
-      if (query != null) {
-        if (query['orderBy'] != null) {
-          ref = ref.orderBy(
-            query['orderBy'],
-            descending: query['descending'] ?? false,
-          );
-        }
-        if (query['limit'] != null) {
-          ref = ref.limit(query['limit']);
-        }
-      }
+  
+    if (query != null) {
+    // ✅ فلترة بالمستخدم
+      if (query['where'] != null && query['isEqualTo'] != null) {
+      ref = ref.where(query['where'], isEqualTo: query['isEqualTo']);
+    }
+    if (query['orderBy'] != null) {
+      ref = ref.orderBy(
+      query['orderBy'],
+      descending: query['descending'] ?? false,
+    );
+    }
+    if (query['limit'] != null) {
+      ref = ref.limit(query['limit']);
+  }
+}
 
       final result = await ref.get();
       // include docId inside every document map
@@ -72,4 +77,16 @@ class FirestoreServices implements DatabaseServies {
     final doc = await firestore.collection(path).doc(documentId).get();
     return doc.exists;
   }
+
+  @override
+  Future<void> deleteData({
+    required String path,
+    required String documentId,
+  }) async {
+  try {
+    await firestore.collection(path).doc(documentId).delete();
+  } catch (e) {
+    rethrow;
+  }
+}
 }

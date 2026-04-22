@@ -1,3 +1,4 @@
+
 import 'package:dartz/dartz.dart';
 import 'package:xspire_dashboard/core/errors/failures.dart';
 import 'package:xspire_dashboard/core/repos/product_repo/products_repo.dart';
@@ -11,15 +12,14 @@ class ProductsRepoImpl implements ProductsRepo {
 
   ProductsRepoImpl(this.databaseServies);
 
-  // ── Add ──────────────────────────────────────────────────────────────────
   @override
   Future<Either<Failure, void>> addProduct(
-    AddProductInputEntity addProductInputEntity,
+    AddProductInputEntity entity,
   ) async {
     try {
       await databaseServies.addData(
         path: BackendEndpoints.productCollection,
-        data: AddProductInputModel.fromEntity(addProductInputEntity).toJson(),
+        data: AddProductInputModel.fromEntity(entity).toJson(),
       );
       return const Right(null);
     } catch (e) {
@@ -27,20 +27,24 @@ class ProductsRepoImpl implements ProductsRepo {
     }
   }
 
-  // ── Get All ───────────────────────────────────────────────────────────────
   @override
-  Future<Either<Failure, List<AddProductInputEntity>>> getProducts() async {
+  Future<Either<Failure, List<AddProductInputEntity>>> getProducts({
+    String? userEmail,
+  }) async {
     try {
+      final Map<String, dynamic>? query = userEmail != null
+          ? {'where': 'userEmail', 'isEqualTo': userEmail}
+          : null;
+
       final data = await databaseServies.getData(
         path: BackendEndpoints.productCollection,
+        query: query,
       );
 
       final List<AddProductInputEntity> products = (data as List)
-          .map(
-            (item) => AddProductInputModel.fromJson(
-              item as Map<String, dynamic>,
-            ).toEntity(),
-          )
+          .map((item) => AddProductInputModel.fromJson(
+                item as Map<String, dynamic>,
+              ).toEntity())
           .toList();
 
       return Right(products);
@@ -49,21 +53,33 @@ class ProductsRepoImpl implements ProductsRepo {
     }
   }
 
-  // ── Update ────────────────────────────────────────────────────────────────
   @override
   Future<Either<Failure, void>> updateProduct(
     String docId,
-    AddProductInputEntity addProductInputEntity,
+    AddProductInputEntity entity,
   ) async {
     try {
       await databaseServies.updateData(
         path: BackendEndpoints.productCollection,
         documentId: docId,
-        data: AddProductInputModel.fromEntity(addProductInputEntity).toJson(),
+        data: AddProductInputModel.fromEntity(entity).toJson(),
       );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure('Failed to update product'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProduct(String docId) async {
+    try {
+      await databaseServies.deleteData(
+        path: BackendEndpoints.productCollection,
+        documentId: docId,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure('Failed to delete product'));
     }
   }
 }
