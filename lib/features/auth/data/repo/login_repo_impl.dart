@@ -20,9 +20,10 @@ class LoginRepoImpl implements LoginRepo {
     if (savedPassword != null && savedPassword == password) {
       Prefs.setBool(isloggedin, true);
 
-      UserSession.instance.setUser(email);
+      final userId = 'manual_${email.split('@').first}';
+      UserSession.instance.setUser(email, userId: userId);
       return right(
-        AppUser(id: 'manual_${email.split('@').first}', email: email),
+        AppUser(id: userId, email: email),
       );
     } else {
       return left(ServerFailure("Not a managed user"));

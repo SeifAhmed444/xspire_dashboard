@@ -34,7 +34,7 @@ class SupabaseStorageService implements StorageService {
   Future<String> uploadFile(File file, String path) async {
     String fileName = b.basename(file.path);
     String extensionName = b.extension(file.path);
-    var result = await _supabase.client.storage
+    await _supabase.client.storage
         .from('food_images')
         .upload('$path/$fileName.$extensionName', file);
         try {

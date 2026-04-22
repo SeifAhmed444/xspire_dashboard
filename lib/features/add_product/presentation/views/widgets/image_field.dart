@@ -24,7 +24,7 @@ class _ImageFieldState extends State<ImageField> {
           setState(() {});
           try {
             await pickImage();
-          } on Exception catch (e) {
+          } on Exception {
             // TODO
           } finally {
             isLoading = false;

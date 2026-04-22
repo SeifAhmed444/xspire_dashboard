@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/add_product_view.dart';
 import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 import 'package:xspire_dashboard/features/products/presentation/views/edit_product_view.dart';
+import 'package:xspire_dashboard/features/products/domain/entities/product_entity.dart';
 import 'package:xspire_dashboard/features/products/presentation/views/products_list_view.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
 
@@ -36,7 +36,7 @@ Route<dynamic> onGenerateRoutes(RouteSettings settings) {
       );
 
     case EditProductView.routeName:
-      final product = settings.arguments as AddProductInputEntity;
+      final product = settings.arguments as ProductEntity;
       return MaterialPageRoute(
         builder: (_) => EditProductView(product: product),
       );
