@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xspire_dashboard/constant.dart';
 import 'package:xspire_dashboard/core/helper_functions/on_generate_routes.dart';
 import 'package:xspire_dashboard/core/services/custom_bolc_observer.dart';

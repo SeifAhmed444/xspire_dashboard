@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/core/utils/app_text_style.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/custom_check_box.dart';
 
