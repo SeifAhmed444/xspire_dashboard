@@ -14,7 +14,7 @@ abstract class RestaurantRemoteDatasource {
 }
 
 class RestaurantRemoteDatasourceImpl implements RestaurantRemoteDatasource {
-  static const _collection = 'restaurants';
+  static const _collection = 'products';
   static const _bucket = 'food_images';
   static const _storagePath = 'images';
 
@@ -32,10 +32,9 @@ class RestaurantRemoteDatasourceImpl implements RestaurantRemoteDatasource {
   Future<List<RestaurantModel>> fetchRestaurants(String userEmail) async {
     try {
       final snapshot = await _firestore
-          .collection(_collection)
-          .where('userEmail', isEqualTo: userEmail)
-          .orderBy('createdAt', descending: true)
-          .get();
+        .collection(_collection)
+        .where('userEmail', isEqualTo: userEmail)
+        .get();
 
       return snapshot.docs
           .map((doc) => RestaurantModel.fromFirestore(doc.data(), doc.id))
