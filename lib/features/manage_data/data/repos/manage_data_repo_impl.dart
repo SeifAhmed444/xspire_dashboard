@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:xspire_dashboard/core/errors/exceptions.dart';
 import 'package:xspire_dashboard/core/errors/failures.dart';
-import 'package:xspire_dashboard/features/manage_data/data/data_source/manage_data_local_datasource.dart';
+import 'package:xspire_dashboard/features/manage_data/data/datasources/manage_data_local_datasource.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/repos/manage_data_repo.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/local_data_entity.dart';
 
