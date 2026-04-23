@@ -6,7 +6,6 @@ import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/core/widgets/special_logout_button.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/add_product_view.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
-import 'package:xspire_dashboard/features/products/presentation/views/products_list_view.dart';
 
 class DashboardViewBody extends StatelessWidget {
   const DashboardViewBody({super.key});
@@ -17,13 +16,15 @@ class DashboardViewBody extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
         slivers: [
+          // ── Header ───────────────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 190,
             pinned: true,
             backgroundColor: AppColors.primaryColor,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+                decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient),
                 child: Stack(
                   children: [
                     Positioned(
@@ -60,12 +61,14 @@ class DashboardViewBody extends StatelessWidget {
                                   color: Colors.white.withOpacity(0.18),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Icon(Icons.restaurant_rounded,
+                                child: const Icon(
+                                    Icons.restaurant_rounded,
                                     color: Colors.white, size: 26),
                               ),
                               const SizedBox(width: 14),
                               const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Text('XSpire Dashboard',
                                       style: TextStyle(
@@ -75,7 +78,8 @@ class DashboardViewBody extends StatelessWidget {
                                   SizedBox(height: 2),
                                   Text('Food Outlet Management',
                                       style: TextStyle(
-                                          color: Colors.white70, fontSize: 13)),
+                                          color: Colors.white70,
+                                          fontSize: 13)),
                                 ],
                               ),
                             ],
@@ -89,6 +93,7 @@ class DashboardViewBody extends StatelessWidget {
             ),
           ),
 
+          // ── Body ─────────────────────────────────────────────────────────
           SliverPadding(
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
@@ -101,9 +106,10 @@ class DashboardViewBody extends StatelessWidget {
                         color: Color(0xFF1A1A2E))),
                 const SizedBox(height: 16),
 
-                // ── Row 1: Add + Manage Data (cache) ─────────────────────
+                // ── Two action cards ────────────────────────────────────
                 Row(
                   children: [
+                    // Add Restaurant
                     Expanded(
                       child: _ActionCard(
                         icon: Icons.add_circle_outline_rounded,
@@ -115,41 +121,29 @@ class DashboardViewBody extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 14),
+                    // Manage Restaurants — now the single management entry
                     Expanded(
                       child: _ActionCard(
                         icon: Icons.manage_search_rounded,
-                        label: 'Manage\nData',
-                        subtitle: 'View cached outlets',
+                        label: 'Manage\nRestaurants',
+                        subtitle: 'View, edit & delete',
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
+                          colors: [
+                            Color(0xFF1565C0),
+                            Color(0xFF1976D2)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        // ✅ FIXED: was going to ProductsListView (Firestore)
-                        // should go to ManageDataView (local SharedPreferences cache)
                         onTap: () => Navigator.pushNamed(
                             context, ManageDataView.routeName),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-
-                // ── Row 2: My Products (Firestore) ────────────────────────
-                _ActionCard(
-                  icon: Icons.store_rounded,
-                  label: 'My Products',
-                  subtitle: 'View & edit on Firestore',
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6A1B9A), Color(0xFF7B1FA2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  onTap: () => Navigator.pushNamed(
-                      context, ProductsListView.routeName),
-                ),
-
                 const SizedBox(height: 32),
+
+                // ── Logout ──────────────────────────────────────────────
                 SpecialLogoutButton(
                   onPressed: () async {
                     await Prefs.setBool(isloggedin, false);
@@ -171,6 +165,7 @@ class DashboardViewBody extends StatelessWidget {
   }
 }
 
+// ── Action Card ───────────────────────────────────────────────────────────────
 class _ActionCard extends StatelessWidget {
   const _ActionCard({
     required this.icon,
