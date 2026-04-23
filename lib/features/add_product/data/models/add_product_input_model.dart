@@ -7,10 +7,10 @@ class AddProductInputModel {
   final String branches;
   final bool isOpend;
   final bool isAvailable;
-  final File? image;        
+  final File? image;
   String? imageUrl;
-  String? docId;    
-  String? userEmail;        
+  String? docId;
+  String? userEmail;
 
   AddProductInputModel({
     required this.name,
@@ -20,12 +20,10 @@ class AddProductInputModel {
     required this.isAvailable,
     this.image,
     this.imageUrl,
-    this.docId, 
-    String? userEmail,
-
+    this.docId,
+    this.userEmail,
   });
 
-  // From entity (used when saving)
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
     return AddProductInputModel(
       name: entity.name,
@@ -36,12 +34,12 @@ class AddProductInputModel {
       image: entity.image,
       imageUrl: entity.imageUrl,
       docId: entity.docId,
-
-      
+      // ✅ FIXED: was missing — caused userEmail to always be null in toJson()
+      // which meant Firestore docs had no userEmail and filtering by user broke
+      userEmail: entity.userEmail,
     );
   }
 
-  // From Firestore JSON (used when fetching)
   factory AddProductInputModel.fromJson(Map<String, dynamic> json) {
     return AddProductInputModel(
       docId: json['docId'] as String?,
@@ -55,7 +53,6 @@ class AddProductInputModel {
     );
   }
 
-  // To entity (used after fetching, to pass around the app)
   AddProductInputEntity toEntity() {
     return AddProductInputEntity(
       docId: docId,
@@ -66,6 +63,7 @@ class AddProductInputModel {
       isAvailable: isAvailable,
       image: image,
       imageUrl: imageUrl,
+      userEmail: userEmail,
     );
   }
 

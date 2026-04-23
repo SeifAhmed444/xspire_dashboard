@@ -1,5 +1,3 @@
-// lib/features/manage_data/domain/entities/local_data_entity.dart
-
 class LocalDataEntity {
   final String id;
   final String name;
@@ -31,7 +29,8 @@ class LocalDataEntity {
 
   factory LocalDataEntity.fromJson(Map<String, dynamic> json) {
     return LocalDataEntity(
-      id: json['id'] as String,
+      // ✅ FIXED: was `json['id'] as String` → crashes with TypeError when null
+      id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       branches: json['branches'] as String? ?? '',
       distance: json['distance'] as String? ?? '',
