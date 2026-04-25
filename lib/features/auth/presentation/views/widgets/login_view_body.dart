@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
 import 'package:xspire_dashboard/core/widgets/special_login_button.dart';
+import 'package:xspire_dashboard/features/auth/data/repo/login_repo_impl.dart';
 import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
 
 class LoginViewBody extends StatefulWidget {
@@ -14,8 +15,20 @@ class LoginViewBody extends StatefulWidget {
 class _LoginViewBodyState extends State<LoginViewBody> {
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   late String email, password;
   bool _isLoading = false;
+
+  List<MapEntry<String, String>> get _demoAccounts =>
+      emailAndPassword.entries.toList();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +44,10 @@ class _LoginViewBodyState extends State<LoginViewBody> {
               // Header
               const SizedBox(height: 60),
               _buildHeader(),
-              const SizedBox(height: 50),
+              const SizedBox(height: 24),
+
+              _buildDemoCredentialsCard(),
+              const SizedBox(height: 24),
 
               // Email Field
               _buildEmailField(),
@@ -100,8 +116,90 @@ class _LoginViewBodyState extends State<LoginViewBody> {
     );
   }
 
+  Widget _buildDemoCredentialsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE6E9E9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Demo Accounts',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F5E3B),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ..._demoAccounts.map((account) {
+            final accountEmail = account.key;
+            final accountPassword = account.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => _fillDemoAccount(accountEmail, accountPassword),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE6E9E9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Email: $accountEmail',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F5E3B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Password: $accountPassword',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F5E3B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 2),
+          const Text(
+            'Tap any account to auto-fill credentials',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7475)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _fillDemoAccount(String email, String password) {
+    _emailController.text = email;
+    _passwordController.text = password;
+  }
+
   Widget _buildEmailField() {
     return CustomTextFormField(
+      controller: _emailController,
       hintText: "Email Address",
       textInputType: TextInputType.emailAddress,
       obscureText: false,
@@ -128,6 +226,7 @@ class _LoginViewBodyState extends State<LoginViewBody> {
 
   Widget _buildPasswordField() {
     return CustomTextFormField(
+      controller: _passwordController,
       hintText: "Password",
       textInputType: TextInputType.visiblePassword,
       obscureText: true,
