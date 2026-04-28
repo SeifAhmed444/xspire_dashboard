@@ -11,6 +11,7 @@ class AddProductInputModel {
   String? imageUrl;
   String? docId;    
   String? userEmail;        
+  final String? price;
 
   AddProductInputModel({
     required this.name,
@@ -21,8 +22,8 @@ class AddProductInputModel {
     this.image,
     this.imageUrl,
     this.docId, 
-    String? userEmail,
-
+    this.userEmail,
+    this.price,
   });
 
   // From entity (used when saving)
@@ -36,8 +37,8 @@ class AddProductInputModel {
       image: entity.image,
       imageUrl: entity.imageUrl,
       docId: entity.docId,
-
-      
+      userEmail: entity.userEmail,
+      price: entity.price,
     );
   }
 
@@ -52,6 +53,7 @@ class AddProductInputModel {
       isAvailable: json['isAvailable'] as bool? ?? false,
       imageUrl: json['imageUrl'] as String?,
       userEmail: json['userEmail'] as String?,
+      price: json['price'] as String?,
     );
   }
 
@@ -66,6 +68,7 @@ class AddProductInputModel {
       isAvailable: isAvailable,
       image: image,
       imageUrl: imageUrl,
+      price: price,
     );
   }
 
@@ -78,6 +81,7 @@ class AddProductInputModel {
       'isAvailable': isAvailable,
       'imageUrl': imageUrl,
       'userEmail': userEmail,
+      'price': price,
     };
   }
 }

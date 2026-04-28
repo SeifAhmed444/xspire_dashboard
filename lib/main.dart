@@ -16,7 +16,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs.init();
   await SupabaseStorageService.initSupabase();
-  await SupabaseStorageService.createBuckets('food_images');
+  try {
+    await SupabaseStorageService.createBuckets('food_images');
+  } catch (e) {
+    debugPrint('Failed to initialize Supabase buckets: $e');
+  }
   Bloc.observer = CustomBlocObserver();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   setupGetIt();
