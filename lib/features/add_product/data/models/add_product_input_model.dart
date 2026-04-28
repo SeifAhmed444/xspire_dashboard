@@ -9,8 +9,9 @@ class AddProductInputModel {
   final bool isAvailable;
   final File? image;
   String? imageUrl;
-  String? docId;
-  String? userEmail;
+  String? docId;    
+  String? userEmail;        
+  final String? price;
 
   AddProductInputModel({
     required this.name,
@@ -20,8 +21,9 @@ class AddProductInputModel {
     required this.isAvailable,
     this.image,
     this.imageUrl,
-    this.docId,
+    this.docId, 
     this.userEmail,
+    this.price,
   });
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
@@ -34,9 +36,8 @@ class AddProductInputModel {
       image: entity.image,
       imageUrl: entity.imageUrl,
       docId: entity.docId,
-      // ✅ FIXED: was missing — caused userEmail to always be null in toJson()
-      // which meant Firestore docs had no userEmail and filtering by user broke
       userEmail: entity.userEmail,
+      price: entity.price,
     );
   }
 
@@ -50,6 +51,7 @@ class AddProductInputModel {
       isAvailable: json['isAvailable'] as bool? ?? false,
       imageUrl: json['imageUrl'] as String?,
       userEmail: json['userEmail'] as String?,
+      price: json['price'] as String?,
     );
   }
 
@@ -64,6 +66,7 @@ class AddProductInputModel {
       image: image,
       imageUrl: imageUrl,
       userEmail: userEmail,
+      price: price,
     );
   }
 
@@ -76,6 +79,7 @@ class AddProductInputModel {
       'isAvailable': isAvailable,
       'imageUrl': imageUrl,
       'userEmail': userEmail,
+      'price': price,
     };
   }
 }
