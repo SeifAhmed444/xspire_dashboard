@@ -2,11 +2,15 @@ import 'dart:io';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 
 class AddProductInputModel {
-  final String name;
-  final String distance;
-  final String branches;
-  final bool isOpend;
+  final String? docId;
   final bool isAvailable;
+  final String title;
+  final double price;
+  final double oldPrice;
+  final int bagsLeft;
+  final double rating;
+  final List<String>? detectedItems;
+  final String? userEmail;
   final File? image;
   String? imageUrl;
   String? docId;    
@@ -14,11 +18,15 @@ class AddProductInputModel {
   final String? price;
 
   AddProductInputModel({
-    required this.name,
-    required this.distance,
-    required this.branches,
-    required this.isOpend,
+    this.docId,
     required this.isAvailable,
+    required this.title,
+    required this.price,
+    required this.oldPrice,
+    required this.bagsLeft,
+    required this.rating,
+    this.detectedItems,
+    this.userEmail,
     this.image,
     this.imageUrl,
     this.docId, 
@@ -28,11 +36,15 @@ class AddProductInputModel {
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
     return AddProductInputModel(
-      name: entity.name,
-      distance: entity.distance,
-      branches: entity.branches,
-      isOpend: entity.isOpend,
+      docId: entity.docId,
       isAvailable: entity.isAvailable,
+      title: entity.title,
+      price: entity.price,
+      oldPrice: entity.oldPrice,
+      bagsLeft: entity.bagsLeft,
+      rating: entity.rating,
+      detectedItems: entity.detectedItems,
+      userEmail: entity.userEmail,
       image: entity.image,
       imageUrl: entity.imageUrl,
       docId: entity.docId,
@@ -44,12 +56,15 @@ class AddProductInputModel {
   factory AddProductInputModel.fromJson(Map<String, dynamic> json) {
     return AddProductInputModel(
       docId: json['docId'] as String?,
-      name: json['name'] as String? ?? '',
-      distance: json['distance'] as String? ?? '',
-      branches: json['branches'] as String? ?? '',
-      isOpend: json['isOpend'] as bool? ?? false,
       isAvailable: json['isAvailable'] as bool? ?? false,
-      imageUrl: json['imageUrl'] as String?,
+      title: json['title'] as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      oldPrice: (json['oldPrice'] as num?)?.toDouble() ?? 0.0,
+      bagsLeft: json['bagsLeft'] as int? ?? 0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      detectedItems: (json['detectedItems'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       userEmail: json['userEmail'] as String?,
       price: json['price'] as String?,
     );
@@ -58,11 +73,14 @@ class AddProductInputModel {
   AddProductInputEntity toEntity() {
     return AddProductInputEntity(
       docId: docId,
-      name: name,
-      distance: distance,
-      branches: branches,
-      isOpend: isOpend,
       isAvailable: isAvailable,
+      title: title,
+      price: price,
+      oldPrice: oldPrice,
+      bagsLeft: bagsLeft,
+      rating: rating,
+      detectedItems: detectedItems,
+      userEmail: userEmail,
       image: image,
       imageUrl: imageUrl,
       userEmail: userEmail,

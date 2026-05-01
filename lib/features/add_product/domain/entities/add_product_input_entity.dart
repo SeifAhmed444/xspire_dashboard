@@ -1,11 +1,15 @@
 import 'dart:io';
 
 class AddProductInputEntity {
-  final String name;
-  final String distance;
-  final String branches;
-  bool isOpend;
+  final String? docId;
   final bool isAvailable;
+  final String title;
+  final double price;
+  final double oldPrice;
+  final int bagsLeft;
+  final double rating;
+  final List<String>? detectedItems;
+  String? userEmail;
   final File? image;
   String? imageUrl;
   String? docId;
@@ -13,11 +17,15 @@ class AddProductInputEntity {
   final String? price;
 
   AddProductInputEntity({
-    required this.name,
-    required this.distance,
-    required this.branches,
-    required this.isOpend,
+    this.docId,
     required this.isAvailable,
+    required this.title,
+    required this.price,
+    required this.oldPrice,
+    required this.bagsLeft,
+    required this.rating,
+    this.detectedItems,
+    this.userEmail,
     this.image,
     this.imageUrl,
     this.docId,

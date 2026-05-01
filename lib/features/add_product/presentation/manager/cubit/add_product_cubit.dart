@@ -1,4 +1,3 @@
-// lib/features/add_product/presentation/manager/cubit/add_product_cubit.dart
 import 'dart:convert';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -6,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xspire_dashboard/core/domain/usecases/business_hours_use_case.dart';
 import 'package:xspire_dashboard/core/repos/image_repo/image_repo.dart';
 import 'package:xspire_dashboard/core/repos/product_repo/products_repo.dart';
-import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
+import '../../../../../core/services/user_session.dart' show UserSession;
 
 part 'add_product_state.dart';
 
@@ -19,9 +18,7 @@ class AddProductCubit extends Cubit<AddProductState> {
   final ProductsRepo productsRepo;
   final _businessHours = const BusinessHoursUseCase();
 
-  // ─────────────────────────────────────────────
-  // Add
-  // ─────────────────────────────────────────────
+  // ── Add ───────────────────────────────────────────────────────────────────
   Future<void> addProduct(AddProductInputEntity entity) async {
     emit(AddProductLoading());
     try {
@@ -30,9 +27,7 @@ class AddProductCubit extends Cubit<AddProductState> {
         return;
       }
 
-      // ✅ ربط البيانات بالمستخدم + حالة الفتح التلقائية
       entity.userEmail = UserSession.instance.currentEmail;
-      entity.isOpend   = _businessHours.isCurrentlyOpen();
 
       final imageResult = await imageRepo.uploadImage(entity.image!);
 
@@ -56,7 +51,7 @@ class AddProductCubit extends Cubit<AddProductState> {
     }
   }
 
-  
+  // ── Update ────────────────────────────────────────────────────────────────
   Future<void> updateProduct(
       String docId, AddProductInputEntity entity) async {
     emit(AddProductLoading());
@@ -64,7 +59,6 @@ class AddProductCubit extends Cubit<AddProductState> {
       if (entity.image != null) {
         final imageResult = await imageRepo.uploadImage(entity.image!);
 
-        // لو رفع الصورة فشل نوقف هنا
         bool imageFailed = false;
         imageResult.fold(
           (failure) {
@@ -86,7 +80,7 @@ class AddProductCubit extends Cubit<AddProductState> {
     }
   }
 
-
+  // ── Get ───────────────────────────────────────────────────────────────────
   Future<void> getProducts() async {
     emit(AddProductLoading());
 
@@ -101,6 +95,7 @@ class AddProductCubit extends Cubit<AddProductState> {
     );
   }
 
+  // ── Delete ────────────────────────────────────────────────────────────────
   Future<void> deleteProduct(String docId) async {
     emit(AddProductLoading());
 
@@ -111,6 +106,7 @@ class AddProductCubit extends Cubit<AddProductState> {
     );
   }
 
+  // ── Cache Locally ─────────────────────────────────────────────────────────
   Future<void> _cacheLocally(AddProductInputEntity entity) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -118,19 +114,21 @@ class AddProductCubit extends Cubit<AddProductState> {
       final list  = jsonDecode(raw) as List;
 
       list.add({
-        'id'         : DateTime.now().millisecondsSinceEpoch.toString(),
-        'name'       : entity.name,
-        'branches'   : entity.branches,
-        'distance'   : entity.distance,
-        'isOpend'    : entity.isOpend,
-        'isAvailable': entity.isAvailable,
-        'imageUrl'   : entity.imageUrl,
-        'userEmail'  : entity.userEmail,
+        'id'           : DateTime.now().millisecondsSinceEpoch.toString(),
+        'isAvailable'  : entity.isAvailable,
+        'imageUrl'     : entity.imageUrl,
+        'userEmail'    : entity.userEmail,
+        'title'        : entity.title,
+        'price'        : entity.price,
+        'oldPrice'     : entity.oldPrice,
+        'bagsLeft'     : entity.bagsLeft,
+        'rating'       : entity.rating,
+        'detectedItems': entity.detectedItems ?? [],
       });
 
       await prefs.setString('cached_restaurants', jsonEncode(list));
     } catch (_) {
-      // الكاش اختياري — لو فشل منوقفش الـ flow
+      // الكاش اختياري
     }
   }
 }

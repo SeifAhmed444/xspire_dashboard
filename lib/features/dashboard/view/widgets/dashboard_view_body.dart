@@ -113,8 +113,8 @@ class DashboardViewBody extends StatelessWidget {
                     Expanded(
                       child: _ActionCard(
                         icon: Icons.add_circle_outline_rounded,
-                        label: 'Add\nRestaurant',
-                        subtitle: 'Add new outlet',
+                        label: 'Add\nBag Item',
+                        subtitle: 'Add new bag item',
                         gradient: AppColors.primaryGradient,
                         onTap: () => Navigator.pushNamed(
                             context, AddProductView.routeName),
