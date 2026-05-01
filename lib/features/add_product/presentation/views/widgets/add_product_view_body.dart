@@ -19,10 +19,9 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String title;
-  double price = 0.0, oldPrice = 0.0, rating = 0.0;
-  int bagsLeft = 0;
+  late String name, branches, distance;
   String? detectedFood;
+  String? price;
   File? image;
   bool isAvailable = false;
 
@@ -105,42 +104,73 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 textInputType: TextInputType.number,
               ),
               const SizedBox(height: 16),
-
-              // ── Toggles ──────────────────────────────────────────────
-              CheckBox.IsCheckBox(
-                label: 'Is Available',
-                onChanged: (v) => isAvailable = v,
+              AiScannerWidget(
+                onScanComplete: (scannedImage, detectedFoodStr) {
+                  setState(() {
+                    this.image = scannedImage;
+                    this.detectedFood = detectedFoodStr;
+                  });
+                },
               ),
               const SizedBox(height: 16),
-
-              // ── Submit ───────────────────────────────────────────────
+              
+              if (detectedFood != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'AI Detected: $detectedFood',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CustomTextFormField(
+                  onSaved: (value) {
+                    price = value!;
+                  },
+                  hintText: 'Product Price',
+                  textInputType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a price';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+              
               CustomButton(
                 onPressed: () {
-                  if (image == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please scan an image first'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    final input = AddProductInputEntity(
-                      isAvailable: isAvailable,
-                      title: title,
-                      price: price,
-                      oldPrice: oldPrice,
-                      bagsLeft: bagsLeft,
-                      rating: rating,
-                      image: image!,
-                      detectedItems: (detectedFood ?? '')
-                          .split(', ')
-                          .where((s) => s.isNotEmpty)
-                          .toList(),
-                    );
-                    context.read<AddProductCubit>().addProduct(input);
+                  if (image != null && detectedFood != null) {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      AddProductInputEntity input = AddProductInputEntity(
+                        name: '$name - $detectedFood', 
+                        distance: distance,
+                        branches: branches,
+                        isAvailable: isAvailable,
+                        isOpend: isOpend,
+                        image: image!, 
+                        price: price,
+                      );
+                      context.read<AddProductCubit>().addProduct(input);
+                    } else {
+                      setState(
+                          () => autovalidateMode = AutovalidateMode.always);
+                    }
                   } else {
                     setState(
                         () => autovalidateMode = AutovalidateMode.always);
@@ -152,6 +182,15 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showImageError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please select and scan an image first'),
+        backgroundColor: Colors.red,
       ),
     );
   }

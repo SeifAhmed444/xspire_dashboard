@@ -12,6 +12,9 @@ class AddProductInputEntity {
   String? userEmail;
   final File? image;
   String? imageUrl;
+  String? docId;
+  String? userEmail;
+  final String? price;
 
   AddProductInputEntity({
     this.docId,
@@ -25,5 +28,8 @@ class AddProductInputEntity {
     this.userEmail,
     this.image,
     this.imageUrl,
+    this.docId,
+    this.userEmail,
+    this.price,
   });
 }
