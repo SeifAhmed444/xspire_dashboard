@@ -13,7 +13,7 @@ class AddProductView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar('Add Data'),
+      appBar: buildAppBar('Add Bag Item'),
       body: BlocProvider(
         create: (context) => AddProductCubit(
           getIt.get<ImageRepo>(),

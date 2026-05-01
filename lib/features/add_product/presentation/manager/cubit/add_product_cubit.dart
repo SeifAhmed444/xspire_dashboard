@@ -28,7 +28,6 @@ class AddProductCubit extends Cubit<AddProductState> {
       }
 
       entity.userEmail = UserSession.instance.currentEmail;
-      entity.isOpend   = _businessHours.isCurrentlyOpen();
 
       final imageResult = await imageRepo.uploadImage(entity.image!);
 
@@ -116,10 +115,6 @@ class AddProductCubit extends Cubit<AddProductState> {
 
       list.add({
         'id'           : DateTime.now().millisecondsSinceEpoch.toString(),
-        'name'         : entity.name,
-        'branches'     : entity.branches,
-        'distance'     : entity.distance,
-        'isOpend'      : entity.isOpend,
         'isAvailable'  : entity.isAvailable,
         'imageUrl'     : entity.imageUrl,
         'userEmail'    : entity.userEmail,

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as pathLib;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xspire_dashboard/core/errors/exceptions.dart';
+import 'package:xspire_dashboard/core/utils/backend_endpoints.dart';
 import 'package:xspire_dashboard/features/manage_data/data/models/restaurant_model.dart';
 
 abstract class RestaurantRemoteDatasource {
@@ -14,7 +15,7 @@ abstract class RestaurantRemoteDatasource {
 }
 
 class RestaurantRemoteDatasourceImpl implements RestaurantRemoteDatasource {
-  static const _collection = 'products';
+  static const _collection = BackendEndpoints.resturantCollection;
   static const _bucket = 'food_images';
   static const _storagePath = 'images';
 

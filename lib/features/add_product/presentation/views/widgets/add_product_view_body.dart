@@ -19,12 +19,11 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String name, branches, distance, title;
+  late String title;
   double price = 0.0, oldPrice = 0.0, rating = 0.0;
   int bagsLeft = 0;
   String? detectedFood;
   File? image;
-  bool isOpend = false;
   bool isAvailable = false;
 
   @override
@@ -75,26 +74,6 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 const SizedBox(height: 16),
               ],
 
-              // ── Restaurant Info ──────────────────────────────────────
-              CustomTextFormField(
-                onSaved: (v) => name = v!,
-                hintText: 'Restaurant Name',
-                textInputType: TextInputType.text,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => branches = v!,
-                hintText: 'Number of Branches',
-                textInputType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => distance = v!,
-                hintText: 'Distance',
-                textInputType: TextInputType.text,
-              ),
-              const SizedBox(height: 16),
-
               // ── Bag Item Info ────────────────────────────────────────
               CustomTextFormField(
                 onSaved: (v) => title = v!,
@@ -133,11 +112,6 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 onChanged: (v) => isAvailable = v,
               ),
               const SizedBox(height: 16),
-              CheckBox.IsCheckBox(
-                label: 'Is Open Now',
-                onChanged: (v) => isOpend = v,
-              ),
-              const SizedBox(height: 16),
 
               // ── Submit ───────────────────────────────────────────────
               CustomButton(
@@ -154,12 +128,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     final input = AddProductInputEntity(
-                      name: name,
-                      logoImage: '',
-                      branches: branches,
-                      distance: distance,
                       isAvailable: isAvailable,
-                      isOpenNow: isOpend,
                       title: title,
                       price: price,
                       oldPrice: oldPrice,
@@ -170,7 +139,6 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                           .split(', ')
                           .where((s) => s.isNotEmpty)
                           .toList(),
-                      isOpend: isOpend,
                     );
                     context.read<AddProductCubit>().addProduct(input);
                   } else {
@@ -178,7 +146,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                         () => autovalidateMode = AutovalidateMode.always);
                   }
                 },
-                text: 'Add Restaurant',
+                text: 'Add Bag Item',
               ),
               const SizedBox(height: 16),
             ],
