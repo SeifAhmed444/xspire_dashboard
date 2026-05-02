@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:xspire_dashboard/core/utils/app_text_style.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/custom_check_box.dart';
 
-class CheckBox extends StatefulWidget {
+class IsFeaturedCheckBox extends StatefulWidget {
   // Added a required `label` parameter so callers can distinguish the two
   // checkboxes ("Is available" vs "Is open").
-  const CheckBox.IsCheckBox({
+  const IsFeaturedCheckBox({
     super.key,
     required this.onChanged,
     this.label = 'Is available',
@@ -15,10 +15,10 @@ class CheckBox extends StatefulWidget {
   final String label;
 
   @override
-  State<CheckBox> createState() => _CheckBoxState();
+  State<IsFeaturedCheckBox> createState() => _IsFeaturedCheckBoxState();
 }
 
-class _CheckBoxState extends State<CheckBox> {
+class _IsFeaturedCheckBoxState extends State<IsFeaturedCheckBox> {
   bool _isChecked = false;
 
   @override

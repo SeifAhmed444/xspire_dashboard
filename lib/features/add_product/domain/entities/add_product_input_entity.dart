@@ -9,12 +9,9 @@ class AddProductInputEntity {
   final int bagsLeft;
   final double rating;
   final List<String>? detectedItems;
-  String? userEmail;
   final File? image;
   String? imageUrl;
-  String? docId;
   String? userEmail;
-  final String? price;
 
   AddProductInputEntity({
     this.docId,
@@ -25,11 +22,8 @@ class AddProductInputEntity {
     required this.bagsLeft,
     required this.rating,
     this.detectedItems,
-    this.userEmail,
     this.image,
     this.imageUrl,
-    this.docId,
     this.userEmail,
-    this.price,
   });
 }

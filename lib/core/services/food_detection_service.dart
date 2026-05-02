@@ -1,209 +1,293 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:image/image.dart' as img;
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter/foundation.dart';
 
-class CustomDetectionResult {
+class FoodClassificationResult {
   final String label;
-  final double score;
-  CustomDetectionResult(this.label, this.score);
+  final double confidence;
+  
+  FoodClassificationResult({
+    required this.label,
+    required this.confidence,
+  });
 }
 
 class FoodDetectionService {
-  Interpreter? _interpreter;
-  List<String>? _labels;
-
-  // Dictionary to map generic AI labels to Egyptian/Famous names
-  final Map<String, String> _egyptianMapping = {
-    'dolma': 'Mahshi / Waraq Enab',
-    'meatball': 'Kofta',
-    'kofta': 'Kofta',
-    'falafel': 'Ta\'ameya / Falafel',
-    'kebab': 'Kebab & Kofta',
-    'shish kabob': 'Shish Tawook',
-    'mulukhiyah': 'Molokhia',
-    'lentil': 'Shorbat Ads (Lentil)',
-    'rice': 'Roz (Rice)',
-    'pasta': 'Macarona / Pasta',
-    'pizza': 'Pizza',
-    'hummus': 'Hummus',
-    'shawarma': 'Shawarma',
-    'kibbeh': 'Kobeiba',
-    'tajine': 'Tagine / Torly',
-    'moussaka': 'Mossaqa\'a / Betengan',
-    'eggplant': 'Betengan',
-    'okra': 'Bamia (Okra)',
-    'flatbread': 'Aish (Bread)',
-    'tabbouleh': 'Salad / Tabbouleh',
-    'baklava': 'Baklawa',
-    'kunafa': 'Kunafa',
-    'koshary': 'Koshary',
-    'kushari': 'Koshary',
-    'fetta': 'Fattah',
-    'stew': 'Tagine / Torly',
-    'casserole': 'Tagine / Torly',
-    'tahini': 'Tahina',
-    'dip': 'Tahina / Dip',
-    'sausage': 'Sogoq',
-    'churrasco': 'Mashweyat (Grilled Meat)',
-    'meze': 'Muqaballat (Meze)',
-    'macaroni': 'Macarona',
-  };
-
-  String? _translateToEgyptian(String label) {
-    String lowerLabel = label.toLowerCase();
-    
-    for (var entry in _egyptianMapping.entries) {
-      if (lowerLabel.contains(entry.key)) {
-        return entry.value;
-      }
-    }
-    return null;
+  static final FoodDetectionService _instance = FoodDetectionService._internal();
+  
+  late Interpreter _interpreter;
+  late List<String> _labels;
+  bool _isInitialized = false;
+  bool _isInitializing = false;
+  late GenerativeModel _geminiModel;
+  
+  // Model input/output dimensions
+  static const int INPUT_SIZE = 224;
+  static const int NUM_RESULTS = 10;
+  
+  FoodDetectionService._internal();
+  
+  factory FoodDetectionService() {
+    return _instance;
   }
-
-  String _formatRawLabel(String label) {
-    // Remove underscores and capitalize words
-    return label.replaceAll('_', ' ').split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
-  }
-
+  
+  /// Initialize the food detection service
   Future<void> init() async {
+    if (_isInitialized || _isInitializing) return;
+    
+    _isInitializing = true;
+    try {
+      // Load TFLite model
+      await _loadModel();
+      
+      // Load labels
+      await _loadLabels();
+      
+      // Initialize Gemini API
+      _initializeGemini();
+      
+      _isInitialized = true;
+      debugPrint('✅ FoodDetectionService initialized successfully');
+    } catch (e) {
+      debugPrint('❌ Error initializing FoodDetectionService: $e');
+      _isInitializing = false;
+      rethrow;
+    }
+  }
+  
+  /// Load the TFLite model
+  Future<void> _loadModel() async {
     try {
       _interpreter = await Interpreter.fromAsset('assets/tflite/food_model.tflite');
-      final String labelsData = await rootBundle.loadString('assets/tflite/labels.txt');
-      _labels = labelsData.split('\n').where((s) => s.trim().isNotEmpty).toList();
-      debugPrint("✅ TFLite Model loaded successfully with ${_labels?.length} labels.");
+      debugPrint('✅ TFLite model loaded');
     } catch (e) {
-      debugPrint("❌ Failed to load TFLite model: $e");
+      debugPrint('❌ Error loading TFLite model: $e');
+      rethrow;
     }
   }
-
-  Future<CustomDetectionResult?> detectFood(File imageFile) async {
+  
+  /// Load labels from assets
+  Future<void> _loadLabels() async {
     try {
-      final imageBytes = await imageFile.readAsBytes();
-      img.Image? originalImage = img.decodeImage(imageBytes);
-      if (originalImage == null) return null;
-      return await detectFoodFromImage(originalImage);
+      final labelData = await rootBundle.loadString('assets/tflite/labels.txt');
+      _labels = labelData.split('\n').where((e) => e.isNotEmpty).toList();
+      debugPrint('✅ Loaded ${_labels.length} labels');
     } catch (e) {
-      debugPrint("TFLite File Error: $e");
-      return null;
+      debugPrint('❌ Error loading labels: $e');
+      rethrow;
     }
   }
-
-  Future<CustomDetectionResult?> detectFoodFromImage(img.Image originalImage) async {
+  
+  /// Initialize Gemini model for fallback
+  void _initializeGemini() {
+    // Using the API key from firebase_options.dart
+    const String apiKey = 'AIzaSyDN769DzqBMfmeWPEe9HU6yfnQA1qzWrJI';
+    _geminiModel = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: apiKey,
+    );
+    debugPrint('✅ Gemini model initialized');
+  }
+  
+  /// Smart food detection with TFLite + Gemini fallback
+  Future<FoodClassificationResult?> smartFoodDetect(File imageFile) async {
     try {
-      if (_interpreter == null || _labels == null) {
+      if (!_isInitialized) {
         await init();
       }
-
-      img.Image resizedImage = img.copyResize(originalImage, width: 224, height: 224);
-
-      var inputTensor = _interpreter!.getInputTensor(0);
-      String inType = inputTensor.type.toString().toLowerCase();
-      bool isQuantized = inType.contains('int8') || inType.contains('uint8');
-
-      var input;
-      if (isQuantized) {
-        input = List.generate(1, (i) => List.generate(224, (j) => List.generate(224, (k) => List.filled(3, 0))));
-        for (int y = 0; y < 224; y++) {
-          for (int x = 0; x < 224; x++) {
-            var pixel = resizedImage.getPixel(x, y);
-            input[0][y][x][0] = pixel.r.toInt();
-            input[0][y][x][1] = pixel.g.toInt();
-            input[0][y][x][2] = pixel.b.toInt();
-          }
-        }
-      } else {
-        input = List.generate(1, (i) => List.generate(224, (j) => List.generate(224, (k) => List.filled(3, 0.0))));
-        for (int y = 0; y < 224; y++) {
-          for (int x = 0; x < 224; x++) {
-            var pixel = resizedImage.getPixel(x, y);
-            input[0][y][x][0] = (pixel.r - 127.5) / 127.5;
-            input[0][y][x][1] = (pixel.g - 127.5) / 127.5;
-            input[0][y][x][2] = (pixel.b - 127.5) / 127.5;
-          }
-        }
+      
+      // Try TFLite first (faster, offline)
+      final tfliteResult = await _detectWithTFLite(imageFile);
+      if (tfliteResult != null && tfliteResult.confidence > 0.5) {
+        debugPrint('✅ TFLite detected: ${tfliteResult.label} (${tfliteResult.confidence.toStringAsFixed(2)})');
+        return tfliteResult;
       }
       
-      var outputTensor = _interpreter!.getOutputTensor(0);
-      String outType = outputTensor.type.toString().toLowerCase();
-      bool isOutputQuantized = outType.contains('int8') || outType.contains('uint8');
-      var output;
-
-      if (isOutputQuantized) {
-        output = List.generate(1, (i) => List.filled(_labels!.length, 0));
-      } else {
-        output = List.generate(1, (i) => List.filled(_labels!.length, 0.0));
-      }
-
-      _interpreter!.run(input, output);
-
-      // Sort all scores to find the best Egyptian match, not just the absolute #1
-      // which might be an irrelevant foreign name (like 'Spaghetti' instead of 'Macaroni')
-      List<MapEntry<int, double>> indexedScores = [];
-      for (int i = 0; i < _labels!.length; i++) {
-        double score = isOutputQuantized ? (output[0][i] / 255.0) : output[0][i];
-        indexedScores.add(MapEntry(i, score));
-      }
+      debugPrint('⚠️ TFLite confidence low, falling back to Gemini...');
       
-      // Sort descending by score
-      indexedScores.sort((a, b) => b.value.compareTo(a.value));
-
-      String? topRawLabel;
-      double topRawScore = 0.0;
-
-      // Look through the top 5 highest confidence predictions
-      for (int i = 0; i < 5 && i < indexedScores.length; i++) {
-        int labelIndex = indexedScores[i].key;
-        double score = indexedScores[i].value;
-        String rawLabel = _labels![labelIndex];
-
-        if (rawLabel.toLowerCase().contains("__background__") || rawLabel.startsWith("/g/")) {
-           continue;
-        }
-        
-        // Save the first valid raw label as a fallback
-        if (topRawLabel == null) {
-          topRawLabel = rawLabel;
-          topRawScore = score;
-        }
-
-        String? translated = _translateToEgyptian(rawLabel);
-        if (translated != null) {
-          // Found a valid Egyptian dish in the top 5!
-          return CustomDetectionResult(translated, score);
-        }
-      }
-      
-      // If we reach here, no Egyptian dish was found in the top 5.
-      // Return the best raw label so we don't get 'Food item' default.
-      if (topRawLabel != null) {
-        return CustomDetectionResult(_formatRawLabel(topRawLabel), topRawScore);
-      }
-
-      return null;
+      // Fallback to Gemini for better accuracy
+      return await _detectWithGemini(imageFile);
     } catch (e) {
-      debugPrint("TFLite Error: $e");
+      debugPrint('❌ Error in smartFoodDetect: $e');
       return null;
     }
   }
-
-  Uint8List _imageToByteListFloat32(img.Image image, int inputSize, double mean, double std) {
-    var convertedBytes = Float32List(1 * inputSize * inputSize * 3);
-    var buffer = Float32List.view(convertedBytes.buffer);
-    int pixelIndex = 0;
-    for (var i = 0; i < inputSize; i++) {
-      for (var j = 0; j < inputSize; j++) {
-        var pixel = image.getPixel(j, i);
-        buffer[pixelIndex++] = (pixel.r - mean) / std;
-        buffer[pixelIndex++] = (pixel.g - mean) / std;
-        buffer[pixelIndex++] = (pixel.b - mean) / std;
+  
+  /// Detect with TFLite
+  Future<FoodClassificationResult?> _detectWithTFLite(File imageFile) async {
+    try {
+      // Read and preprocess image
+      final imageData = await _preprocessImage(imageFile);
+      if (imageData == null) return null;
+      
+      // Run inference
+      final output = List<double>.filled(NUM_RESULTS, 0.0);
+      _interpreter.run(imageData, output);
+      
+      // Find top result
+      double maxConfidence = 0.0;
+      int maxIndex = 0;
+      
+      for (int i = 0; i < output.length; i++) {
+        if (output[i] > maxConfidence) {
+          maxConfidence = output[i];
+          maxIndex = i;
+        }
       }
+      
+      if (maxIndex < _labels.length) {
+        return FoodClassificationResult(
+          label: _labels[maxIndex],
+          confidence: maxConfidence,
+        );
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error in TFLite detection: $e');
+      return null;
     }
-    return convertedBytes.buffer.asUint8List();
+  }
+  
+  /// Detect with Gemini (fallback, more accurate but slower)
+  Future<FoodClassificationResult?> _detectWithGemini(File imageFile) async {
+    try {
+      // Read image and convert to base64
+      final bytes = await imageFile.readAsBytes();
+      
+      // Create content with image
+      final content = [
+        Content.multi([
+          TextPart('What food item is shown in this image? '
+              'Respond with ONLY the food name, no explanation.'),
+          DataPart('image/jpeg', bytes),
+        ])
+      ];
+      
+      // Get response from Gemini
+      final response = await _geminiModel.generateContent(content);
+      
+      if (response.text != null && response.text!.isNotEmpty) {
+        final foodName = response.text!.trim();
+        return FoodClassificationResult(
+          label: foodName,
+          confidence: 0.95, // High confidence for Gemini
+        );
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error in Gemini detection: $e');
+      return null;
+    }
+  }
+  
+  /// Detect multiple items (object detection/segmentation)
+  Future<Map<String, int>> detectItems(File imageFile) async {
+    try {
+      if (!_isInitialized) {
+        await init();
+      }
+      
+      // For now, use Gemini for multi-item detection
+      // (TFLite single-image classifier isn't suitable for this)
+      final result = <String, int>{};
+      
+      final bytes = await imageFile.readAsBytes();
+      
+      final content = [
+        Content.multi([
+          TextPart(
+            'Identify all distinct food items in this image. '
+            'Respond in this exact format:\n'
+            'item1: count\n'
+            'item2: count\n'
+            'Only list items, no other text.'
+          ),
+          DataPart('image/jpeg', bytes),
+        ])
+      ];
+      
+      final response = await _geminiModel.generateContent(content);
+      
+      if (response.text != null && response.text!.isNotEmpty) {
+        final lines = response.text!.split('\n');
+        
+        for (final line in lines) {
+          final parts = line.split(':');
+          if (parts.length == 2) {
+            final itemName = parts[0].trim().toLowerCase();
+            final count = int.tryParse(parts[1].trim()) ?? 1;
+            result[itemName] = count;
+          }
+        }
+      }
+      
+      debugPrint('✅ Detected items: $result');
+      return result;
+    } catch (e) {
+      debugPrint('❌ Error in detectItems: $e');
+      return {};
+    }
+  }
+  
+  /// Preprocess image for TFLite
+  Future<List<List<List<List<double>>>>>? _preprocessImage(File imageFile) async {
+    try {
+      // Read image
+      final bytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(bytes);
+      
+      if (image == null) return null;
+      
+      // Resize to INPUT_SIZE x INPUT_SIZE
+      final resized = img.copyResize(
+        image,
+        width: INPUT_SIZE,
+        height: INPUT_SIZE,
+      );
+      
+      // Convert to normalized float values
+      final List<List<List<List<double>>>> input = List.generate(
+        1,
+        (i) => List.generate(
+          INPUT_SIZE,
+          (y) => List.generate(
+            INPUT_SIZE,
+            (x) => List.generate(
+              3,
+              (c) {
+                final pixel = resized.getPixelSafe(x, y);
+                final value = c == 0
+                    ? pixel.r.toDouble()
+                    : c == 1
+                        ? pixel.g.toDouble()
+                        : pixel.b.toDouble();
+                return value / 255.0; // Normalize to 0-1
+              },
+            ),
+          ),
+        ),
+      );
+      
+      return input;
+    } catch (e) {
+      debugPrint('❌ Error preprocessing image: $e');
+      return null;
+    }
+  }
+  
+  /// Dispose resources
+  void dispose() {
+    try {
+      _interpreter.close();
+      _isInitialized = false;
+      debugPrint('✅ FoodDetectionService disposed');
+    } catch (e) {
+      debugPrint('❌ Error disposing FoodDetectionService: $e');
+    }
   }
 }

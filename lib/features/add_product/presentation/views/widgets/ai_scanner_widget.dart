@@ -1,11 +1,22 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:xspire_dashboard/core/services/food_detection_service.dart';
+import 'package:xspire_dashboard/core/services/get_it_services.dart';
+
+enum AiScannerMode { classification, segmentation }
+
+typedef OnScanComplete = void Function(File image, dynamic result);
 
 class AiScannerWidget extends StatefulWidget {
   final OnScanComplete onScanComplete;
+  final AiScannerMode mode;
 
-  const AiScannerWidget({super.key, required this.onScanComplete});
+  const AiScannerWidget({
+    super.key, 
+    required this.onScanComplete, 
+    this.mode = AiScannerMode.classification,
+  });
 
   @override
   State<AiScannerWidget> createState() => _AiScannerWidgetState();
@@ -15,31 +26,55 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
   File? _image;
   bool _isLoading = false;
   String? _detectedFood;
+  final FoodDetectionService _foodService = getIt<FoodDetectionService>();
 
-
-
-  Future<void> _pickImage() async {
+  Future<void> _pickImageAndScan() async {
     try {
       final pickedFile = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
       );
+
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
-          _detectedFood = "Image Selected";
+          _isLoading = true;
+          _detectedFood = "Analyzing image...";
+        });
+
+        // Use the SMART DETECTION (TFLite + Gemini Fallback)
+        dynamic result;
+        if (widget.mode == AiScannerMode.classification) {
+          final classificationResult = await _foodService.smartFoodDetect(_image!);
+          result = classificationResult?.label ?? "Food item";
+        } else {
+          result = await _foodService.detectItems(_image!);
+        }
+
+        setState(() {
+          _isLoading = false;
+          if (widget.mode == AiScannerMode.classification) {
+            _detectedFood = result as String;
+          } else {
+            final Map<String, int> items = result as Map<String, int>;
+            _detectedFood = items.entries.map((e) => "${e.value}x ${e.key}").join(", ");
+          }
         });
         
-        // Call the callback with the selected image
-        widget.onScanComplete(_image!, _detectedFood ?? "Image Selected");
+        // Call the callback with the results
+        widget.onScanComplete(_image!, result);
       }
     } catch (e) {
-      debugPrint("Image picker error: $e");
+      debugPrint("Scanner Error: $e");
+      setState(() {
+        _isLoading = false;
+        _detectedFood = "Error detecting food";
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
@@ -47,14 +82,11 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // ... inside state
-    String displayResults = _getCombinedResults(_segmentationResults);
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GestureDetector(
-          onTap: _isScanning ? null : _pickImageAndScan,
+          onTap: _isLoading ? null : _pickImageAndScan,
           child: Container(
             height: 280,
             decoration: BoxDecoration(
@@ -83,7 +115,6 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Placeholder
                   if (_image == null)
                     Center(
                       child: _isLoading
@@ -94,7 +125,7 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
                                 Icon(Icons.document_scanner, size: 60, color: Colors.cyanAccent),
                                 SizedBox(height: 16),
                                 Text(
-                                  'Tap to Select Image',
+                                  'Tap to Scan Food',
                                   style: TextStyle(
                                     color: Colors.white, 
                                     fontSize: 16, 
@@ -104,14 +135,22 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
                                 ),
                                 SizedBox(height: 8),
                                 Text(
-                                  'Pick an image from gallery',
+                                  'Hybrid AI (TFLite + Gemini)',
                                   style: TextStyle(color: Colors.white54, fontSize: 12),
                                 ),
                               ],
                             ),
                     )
-                  else
+                  else ...[
                     Image.file(_image!, fit: BoxFit.contain),
+                    if (_isLoading)
+                      Container(
+                        color: Colors.black45,
+                        child: const Center(
+                          child: CircularProgressIndicator(color: Colors.cyanAccent),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),
@@ -122,8 +161,10 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2C3E50), Color(0xFF3498DB)],
+              gradient: LinearGradient(
+                colors: _isLoading 
+                    ? [const Color(0xFF2C3E50), const Color(0xFF2C3E50)]
+                    : [const Color(0xFF2C3E50), const Color(0xFF3498DB)],
               ),
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
@@ -137,11 +178,16 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
+                Icon(
+                  _isLoading ? Icons.hourglass_empty : Icons.check_circle, 
+                  color: Colors.white
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Image: $_detectedFood',
+                    _isLoading 
+                        ? (widget.mode == AiScannerMode.classification ? 'AI is Thinking...' : 'Segmenting Items...') 
+                        : 'Detected: $_detectedFood',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -149,7 +195,6 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
                     ),
                   ),
                 ),
-                const Icon(Icons.check_circle_outline, color: Colors.white),
               ],
             ),
           )
@@ -157,137 +202,4 @@ class _AiScannerWidgetState extends State<AiScannerWidget> {
       ],
     );
   }
-}
-
-class BoundingBoxPainter extends CustomPainter {
-  final List<SegmentationResult> results;
-  final Size imageSize;
-
-  BoundingBoxPainter(this.results, this.imageSize);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (results.isEmpty) return;
-
-    final double scaleX = size.width / imageSize.width;
-    final double scaleY = size.height / imageSize.height;
-    
-    // Maintain aspect ratio fit based on BoxFit.contain behavior
-    double scale = scaleX < scaleY ? scaleX : scaleY;
-    
-    double dx = (size.width - imageSize.width * scale) / 2;
-    double dy = (size.height - imageSize.height * scale) / 2;
-
-    final Paint boxPaint = Paint()
-      ..color = Colors.pinkAccent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-      
-    final Paint fillPaint = Paint()
-      ..color = Colors.pinkAccent.withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-      
-    final TextPainter textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    for (var result in results) {
-      final rect = result.boundingBox;
-      
-      final scaledRect = Rect.fromLTRB(
-        rect.left * scale + dx,
-        rect.top * scale + dy,
-        rect.right * scale + dx,
-        rect.bottom * scale + dy,
-      );
-
-      canvas.drawRect(scaledRect, fillPaint);
-      canvas.drawRect(scaledRect, boxPaint);
-      
-      // Draw label background
-      final RRect labelBadge = RRect.fromRectAndRadius(
-        Rect.fromLTWH(scaledRect.left, scaledRect.top - 24, 120, 24),
-        const Radius.circular(4)
-      );
-      canvas.drawRRect(labelBadge, Paint()..color = Colors.pinkAccent);
-      
-      // Draw text
-      textPainter.text = TextSpan(
-        text: ' ${result.label}',
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(scaledRect.left + 4, scaledRect.top - 20));
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-// ── Bounding box painter ──────────────────────────────────────────────────────
-class BoundingBoxPainter extends CustomPainter {
-  final List<SegmentationResult> results;
-  final Size imageSize;
-
-  BoundingBoxPainter(this.results, this.imageSize);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (results.isEmpty) return;
-
-    final double scaleX = size.width / imageSize.width;
-    final double scaleY = size.height / imageSize.height;
-    final double scale = scaleX < scaleY ? scaleX : scaleY;
-
-    final double dx = (size.width - imageSize.width * scale) / 2;
-    final double dy = (size.height - imageSize.height * scale) / 2;
-
-    final boxPaint = Paint()
-      ..color = Colors.cyanAccent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-
-    final fillPaint = Paint()
-      ..color = Colors.cyanAccent.withOpacity(0.15)
-      ..style = PaintingStyle.fill;
-
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
-    for (var result in results) {
-      final rect = result.boundingBox;
-      final scaledRect = Rect.fromLTRB(
-        rect.left * scale + dx,
-        rect.top * scale + dy,
-        rect.right * scale + dx,
-        rect.bottom * scale + dy,
-      );
-
-      canvas.drawRect(scaledRect, fillPaint);
-      canvas.drawRect(scaledRect, boxPaint);
-
-      // Label badge
-      final labelWidth = (result.label.length * 8.0).clamp(80.0, 200.0);
-      final badge = RRect.fromRectAndRadius(
-        Rect.fromLTWH(scaledRect.left, scaledRect.top - 24, labelWidth, 24),
-        const Radius.circular(4),
-      );
-      canvas.drawRRect(badge, Paint()..color = Colors.cyanAccent);
-
-      textPainter.text = TextSpan(
-        text: ' ${result.label}',
-        style: const TextStyle(
-          color: Color(0xFF1E202C),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(
-          canvas, Offset(scaledRect.left + 4, scaledRect.top - 20));
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

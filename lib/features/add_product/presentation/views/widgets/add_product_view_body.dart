@@ -19,12 +19,13 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String title;
+  String title = '';
   double price = 0.0, oldPrice = 0.0, rating = 0.0;
   int bagsLeft = 0;
   String? detectedFood;
+  List<DetectedItem> detectedItems = [];
   File? image;
-  bool isAvailable = false;
+  bool isAvailable = true;
 
   @override
   Widget build(BuildContext context) {
@@ -38,19 +39,23 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
             children: [
               const SizedBox(height: 16),
 
-              // ── AI Scanner ──────────────────────────────────────────────
+              // ── AI Scanner (Segmentation) ──────────────────────────────
               AiScannerWidget(
-                onScanComplete: (scannedImage, items) {
+                mode: AiScannerMode.segmentation,
+                onScanComplete: (scannedImage, result) {
                   setState(() {
                     image = scannedImage;
-                    detectedItems = items;
+                    final Map<String, int> itemsMap = result as Map<String, int>;
+                    detectedItems = itemsMap.entries
+                        .map((e) => DetectedItem(e.key, e.value))
+                        .toList();
                   });
                 },
               ),
               const SizedBox(height: 16),
 
               // ── AI Detected Variables ──────────────────────────────────
-              if (detectedItems != null && detectedItems!.isNotEmpty) ...[
+              if (detectedItems.isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -76,7 +81,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ...detectedItems!.map((item) {
+                      ...detectedItems.map((item) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
@@ -130,36 +135,62 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 const SizedBox(height: 16),
               ],
 
-              // ── Bag Item Info ────────────────────────────────────────
+              // ── Bag Info ──────────────────────────────────────────────
               CustomTextFormField(
-                onSaved: (v) => price = double.tryParse(v!) ?? 0.0,
-                hintText: 'Price',
-                textInputType: TextInputType.number,
+                onSaved: (v) => title = v ?? '',
+                hintText: 'Bag Title (e.g. Mixed Veggies)',
+                textInputType: TextInputType.text,
+                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => oldPrice = double.tryParse(v!) ?? 0.0,
-                hintText: 'Old Price',
-                textInputType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextFormField(
+                      onSaved: (v) => price = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Price',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextFormField(
+                      onSaved: (v) => oldPrice = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Old Price',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => bagsLeft = int.tryParse(v!) ?? 0,
-                hintText: 'Bags Left',
-                textInputType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextFormField(
+                      onSaved: (v) => bagsLeft = int.tryParse(v!) ?? 0,
+                      hintText: 'Bags Left',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextFormField(
+                      onSaved: (v) => rating = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Rating (0-5)',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => rating = double.tryParse(v!) ?? 0.0,
-                hintText: 'Rating (0-5)',
-                textInputType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
+              
+              // ── AI Scanner (Classification - Optional) ────────────────
               AiScannerWidget(
-                onScanComplete: (scannedImage, detectedFoodStr) {
+                mode: AiScannerMode.classification,
+                onScanComplete: (scannedImage, result) {
                   setState(() {
-                    this.image = scannedImage;
-                    this.detectedFood = detectedFoodStr;
+                    image = scannedImage;
+                    detectedFood = result as String;
                   });
                 },
               ),
@@ -169,17 +200,17 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green),
+                    border: Border.all(color: Colors.blue),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.green),
+                      const Icon(Icons.info_outline, color: Colors.blue),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'AI Detected: $detectedFood',
+                          'Food Category: $detectedFood',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -187,22 +218,13 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                CustomTextFormField(
-                  onSaved: (value) {
-                    price = value!;
-                  },
-                  hintText: 'Product Price',
-                  textInputType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a price';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
               ],
               
+              IsFeaturedCheckBox(
+                onChanged: (v) => isAvailable = v,
+              ),
+              const SizedBox(height: 20),
+
               CustomButton(
                 onPressed: () {
                   if (image == null) {
@@ -216,6 +238,13 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   }
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
+                    
+                    // Combine detected items into a string list for the entity
+                    final List<String> finalItems = detectedItems
+                        .where((i) => i.count > 0)
+                        .map((i) => "${i.count}x ${i.name}")
+                        .toList();
+
                     final input = AddProductInputEntity(
                       isAvailable: isAvailable,
                       title: title,
@@ -224,33 +253,26 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                       bagsLeft: bagsLeft,
                       rating: rating,
                       image: image!,
-                      detectedItems: (detectedFood ?? '')
-                          .split(', ')
-                          .where((s) => s.isNotEmpty)
-                          .toList(),
+                      detectedItems: finalItems,
                     );
                     context.read<AddProductCubit>().addProduct(input);
                   } else {
-                    setState(
-                        () => autovalidateMode = AutovalidateMode.always);
+                    setState(() => autovalidateMode = AutovalidateMode.always);
                   }
                 },
                 text: 'Add Bag Item',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  void _showImageError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please select and scan an image first'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
+class DetectedItem {
+  final String name;
+  int count;
+  DetectedItem(this.name, this.count);
 }

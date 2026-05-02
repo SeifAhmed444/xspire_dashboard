@@ -13,9 +13,6 @@ class AddProductInputModel {
   final String? userEmail;
   final File? image;
   String? imageUrl;
-  String? docId;    
-  String? userEmail;        
-  final String? price;
 
   AddProductInputModel({
     this.docId,
@@ -29,9 +26,6 @@ class AddProductInputModel {
     this.userEmail,
     this.image,
     this.imageUrl,
-    this.docId, 
-    this.userEmail,
-    this.price,
   });
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
@@ -47,9 +41,6 @@ class AddProductInputModel {
       userEmail: entity.userEmail,
       image: entity.image,
       imageUrl: entity.imageUrl,
-      docId: entity.docId,
-      userEmail: entity.userEmail,
-      price: entity.price,
     );
   }
 
@@ -66,7 +57,7 @@ class AddProductInputModel {
           ?.map((e) => e as String)
           .toList(),
       userEmail: json['userEmail'] as String?,
-      price: json['price'] as String?,
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 
@@ -83,21 +74,21 @@ class AddProductInputModel {
       userEmail: userEmail,
       image: image,
       imageUrl: imageUrl,
-      userEmail: userEmail,
-      price: price,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'distance': distance,
-      'branches': branches,
-      'isOpend': isOpend,
+      'docId': docId,
       'isAvailable': isAvailable,
-      'imageUrl': imageUrl,
-      'userEmail': userEmail,
+      'title': title,
       'price': price,
+      'oldPrice': oldPrice,
+      'bagsLeft': bagsLeft,
+      'rating': rating,
+      'detectedItems': detectedItems,
+      'userEmail': userEmail,
+      'imageUrl': imageUrl,
     };
   }
-}
+}
