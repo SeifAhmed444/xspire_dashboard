@@ -19,9 +19,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
+  late String title;
   double price = 0.0, oldPrice = 0.0, rating = 0.0;
   int bagsLeft = 0;
-  List<DetectedFoodItem>? detectedItems;
+  String? detectedFood;
   File? image;
   bool isAvailable = false;
 
@@ -154,15 +155,54 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 textInputType: TextInputType.number,
               ),
               const SizedBox(height: 16),
-
-              // ── Toggles ──────────────────────────────────────────────
-              CheckBox.IsCheckBox(
-                label: 'Is Available',
-                onChanged: (v) => isAvailable = v,
+              AiScannerWidget(
+                onScanComplete: (scannedImage, detectedFoodStr) {
+                  setState(() {
+                    this.image = scannedImage;
+                    this.detectedFood = detectedFoodStr;
+                  });
+                },
               ),
               const SizedBox(height: 16),
-
-              // ── Submit ───────────────────────────────────────────────
+              
+              if (detectedFood != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'AI Detected: $detectedFood',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CustomTextFormField(
+                  onSaved: (value) {
+                    price = value!;
+                  },
+                  hintText: 'Product Price',
+                  textInputType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a price';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+              
               CustomButton(
                 onPressed: () {
                   if (image == null) {
@@ -174,41 +214,20 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                     );
                     return;
                   }
-                  
-                  // Filter out items with 0 count
-                  final finalItems = detectedItems
-                          ?.where((element) => element.count > 0)
-                          .toList() ?? [];
-
-                  if (finalItems.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please ensure there is at least one item detected'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
-                    
-                    final itemNames = finalItems.map((e) => e.name).toSet().toList();
-                    final generatedTitle = 'Bag with ${itemNames.join(', ')}';
-                    
-                    final detectedItemsStrings = finalItems
-                        .map((e) => '${e.count}x ${e.name}')
-                        .toList();
-
                     final input = AddProductInputEntity(
                       isAvailable: isAvailable,
-                      title: generatedTitle,
+                      title: title,
                       price: price,
                       oldPrice: oldPrice,
                       bagsLeft: bagsLeft,
                       rating: rating,
                       image: image!,
-                      detectedItems: detectedItemsStrings,
+                      detectedItems: (detectedFood ?? '')
+                          .split(', ')
+                          .where((s) => s.isNotEmpty)
+                          .toList(),
                     );
                     context.read<AddProductCubit>().addProduct(input);
                   } else {
@@ -222,6 +241,15 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showImageError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please select and scan an image first'),
+        backgroundColor: Colors.red,
       ),
     );
   }
