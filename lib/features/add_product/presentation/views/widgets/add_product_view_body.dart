@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:xspire_dashboard/core/services/food_detection_service.dart';
 import 'package:xspire_dashboard/core/widgets/custom_button.dart';
 import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
@@ -19,12 +20,27 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String title;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _oldPriceController = TextEditingController();
+  final TextEditingController _bagsLeftController = TextEditingController();
+
+  String title = '';
   double price = 0.0, oldPrice = 0.0, rating = 0.0;
   int bagsLeft = 0;
   String? detectedFood;
+  List<DetectedItem> detectedItems = [];
   File? image;
-  bool isAvailable = false;
+  bool isAvailable = true;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _priceController.dispose();
+    _oldPriceController.dispose();
+    _bagsLeftController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,49 +54,73 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
             children: [
               const SizedBox(height: 16),
 
-              // ── AI Scanner ──────────────────────────────────────────────
+              // ── AI Scanner (Primary Entry Point) ──────────────────────
               AiScannerWidget(
-                onScanComplete: (scannedImage, items) {
+                mode: AiScannerMode.segmentation,
+                onScanComplete: (scannedImage, result) {
                   setState(() {
                     image = scannedImage;
-                    detectedItems = items;
+                    final Map<String, FoodClassificationResult> itemsMap = 
+                        result as Map<String, FoodClassificationResult>;
+                    
+                    detectedItems = itemsMap.entries
+                        .map((e) => DetectedItem(e.key, e.value.count))
+                        .toList();
+                    
+                    // Fill fields from the first detected item (the main dish)
+                    if (itemsMap.isNotEmpty) {
+                      final firstItem = itemsMap.values.first;
+                      _titleController.text = firstItem.label;
+                      _priceController.text = firstItem.price.toString();
+                      _oldPriceController.text = firstItem.oldPrice.toString();
+                      _bagsLeftController.text = firstItem.count.toString();
+                      isAvailable = firstItem.isAvailable;
+                      
+                      // Also update local state variables
+                      title = firstItem.label;
+                      price = firstItem.price;
+                      oldPrice = firstItem.oldPrice;
+                      bagsLeft = firstItem.count;
+                    }
                   });
                 },
               ),
               const SizedBox(height: 16),
 
               // ── AI Detected Variables ──────────────────────────────────
-              if (detectedItems != null && detectedItems!.isNotEmpty) ...[
+              if (detectedItems.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green),
+                    gradient: LinearGradient(
+                      colors: [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.auto_awesome, color: Colors.green),
-                          SizedBox(width: 8),
+                          const Icon(Icons.auto_awesome, color: Colors.green),
+                          const SizedBox(width: 8),
                           Text(
                             'Verify Detected Items',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
                               color: Colors.green,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      ...detectedItems!.map((item) {
+                      const SizedBox(height: 16),
+                      ...detectedItems.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
+                          padding: const EdgeInsets.only(bottom: 12.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: Text(
@@ -91,34 +131,58 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                   ),
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (item.count > 0) item.count--;
-                                      });
-                                    },
-                                    icon: const Icon(Icons.remove_circle_outline),
-                                    color: Colors.redAccent,
-                                  ),
-                                  Text(
-                                    '${item.count}',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          if (item.count > 0) {
+                                            item.count--;
+                                            // If it's the first item, update the main bagsLeft field
+                                            if (idx == 0) {
+                                              _bagsLeftController.text = item.count.toString();
+                                              bagsLeft = item.count;
+                                            }
+                                          }
+                                        });
+                                      },
+                                      icon: const Icon(Icons.remove, size: 18),
+                                      color: Colors.redAccent,
                                     ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        item.count++;
-                                      });
-                                    },
-                                    icon: const Icon(Icons.add_circle_outline),
-                                    color: Colors.green,
-                                  ),
-                                ],
+                                    Text(
+                                      '${item.count}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          item.count++;
+                                          // If it's the first item, update the main bagsLeft field
+                                          if (idx == 0) {
+                                            _bagsLeftController.text = item.count.toString();
+                                            bagsLeft = item.count;
+                                          }
+                                        });
+                                      },
+                                      icon: const Icon(Icons.add, size: 18),
+                                      color: Colors.green,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -130,79 +194,65 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                 const SizedBox(height: 16),
               ],
 
-              // ── Bag Item Info ────────────────────────────────────────
+              // ── Bag Info Form ─────────────────────────────────────────
               CustomTextFormField(
-                onSaved: (v) => price = double.tryParse(v!) ?? 0.0,
-                hintText: 'Price',
-                textInputType: TextInputType.number,
+                controller: _titleController,
+                onSaved: (v) => title = v ?? '',
+                hintText: 'Bag Title (e.g. Mixed Veggies)',
+                textInputType: TextInputType.text,
+                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => oldPrice = double.tryParse(v!) ?? 0.0,
-                hintText: 'Old Price',
-                textInputType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextFormField(
+                      controller: _priceController,
+                      onSaved: (v) => price = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Price',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextFormField(
+                      controller: _oldPriceController,
+                      onSaved: (v) => oldPrice = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Old Price',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => bagsLeft = int.tryParse(v!) ?? 0,
-                hintText: 'Bags Left',
-                textInputType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                onSaved: (v) => rating = double.tryParse(v!) ?? 0.0,
-                hintText: 'Rating (0-5)',
-                textInputType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              AiScannerWidget(
-                onScanComplete: (scannedImage, detectedFoodStr) {
-                  setState(() {
-                    this.image = scannedImage;
-                    this.detectedFood = detectedFoodStr;
-                  });
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextFormField(
+                      controller: _bagsLeftController,
+                      onSaved: (v) => bagsLeft = int.tryParse(v!) ?? 0,
+                      hintText: 'Bags Left',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextFormField(
+                      onSaved: (v) => rating = double.tryParse(v!) ?? 0.0,
+                      hintText: 'Rating (0-5)',
+                      textInputType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               
-              if (detectedFood != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.green),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'AI Detected: $detectedFood',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomTextFormField(
-                  onSaved: (value) {
-                    price = value!;
-                  },
-                  hintText: 'Product Price',
-                  textInputType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a price';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-              
+              IsFeaturedCheckBox(
+                value: isAvailable,
+                onChanged: (v) => setState(() => isAvailable = v),
+              ),
+              const SizedBox(height: 20),
+
               CustomButton(
                 onPressed: () {
                   if (image == null) {
@@ -216,6 +266,12 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   }
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
+                    
+                    final List<String> finalItems = detectedItems
+                        .where((i) => i.count > 0)
+                        .map((i) => "${i.count}x ${i.name}")
+                        .toList();
+
                     final input = AddProductInputEntity(
                       isAvailable: isAvailable,
                       title: title,
@@ -224,33 +280,26 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                       bagsLeft: bagsLeft,
                       rating: rating,
                       image: image!,
-                      detectedItems: (detectedFood ?? '')
-                          .split(', ')
-                          .where((s) => s.isNotEmpty)
-                          .toList(),
+                      detectedItems: finalItems,
                     );
                     context.read<AddProductCubit>().addProduct(input);
                   } else {
-                    setState(
-                        () => autovalidateMode = AutovalidateMode.always);
+                    setState(() => autovalidateMode = AutovalidateMode.always);
                   }
                 },
                 text: 'Add Bag Item',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  void _showImageError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please select and scan an image first'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
+class DetectedItem {
+  final String name;
+  int count;
+  DetectedItem(this.name, this.count);
 }
