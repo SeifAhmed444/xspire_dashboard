@@ -19,10 +19,9 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  late String title;
   double price = 0.0, oldPrice = 0.0, rating = 0.0;
   int bagsLeft = 0;
-  String? detectedFood;
+  List<DetectedFoodItem>? detectedItems;
   File? image;
   bool isAvailable = false;
 
@@ -38,36 +37,92 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
             children: [
               const SizedBox(height: 16),
 
-              // ── AI Scanner أول حاجة ──────────────────────────────────
+              // ── AI Scanner ──────────────────────────────────────────────
               AiScannerWidget(
-                onScanComplete: (scannedImage, detectedFoodStr) {
+                onScanComplete: (scannedImage, items) {
                   setState(() {
                     image = scannedImage;
-                    detectedFood = detectedFoodStr;
+                    detectedItems = items;
                   });
                 },
               ),
               const SizedBox(height: 16),
 
-              // ── نتيجة الـ AI ─────────────────────────────────────────
-              if (detectedFood != null) ...[
+              // ── AI Detected Variables ──────────────────────────────────
+              if (detectedItems != null && detectedItems!.isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.green),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.green),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'AI Detected: $detectedFood',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                      const Row(
+                        children: [
+                          Icon(Icons.auto_awesome, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(
+                            'Verify Detected Items',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 12),
+                      ...detectedItems!.map((item) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        if (item.count > 0) item.count--;
+                                      });
+                                    },
+                                    icon: const Icon(Icons.remove_circle_outline),
+                                    color: Colors.redAccent,
+                                  ),
+                                  Text(
+                                    '${item.count}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        item.count++;
+                                      });
+                                    },
+                                    icon: const Icon(Icons.add_circle_outline),
+                                    color: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
@@ -75,12 +130,6 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
               ],
 
               // ── Bag Item Info ────────────────────────────────────────
-              CustomTextFormField(
-                onSaved: (v) => title = v!,
-                hintText: 'Bag Title',
-                textInputType: TextInputType.text,
-              ),
-              const SizedBox(height: 16),
               CustomTextFormField(
                 onSaved: (v) => price = double.tryParse(v!) ?? 0.0,
                 hintText: 'Price',
@@ -125,20 +174,41 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                     );
                     return;
                   }
+                  
+                  // Filter out items with 0 count
+                  final finalItems = detectedItems
+                          ?.where((element) => element.count > 0)
+                          .toList() ?? [];
+
+                  if (finalItems.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please ensure there is at least one item detected'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
+                    
+                    final itemNames = finalItems.map((e) => e.name).toSet().toList();
+                    final generatedTitle = 'Bag with ${itemNames.join(', ')}';
+                    
+                    final detectedItemsStrings = finalItems
+                        .map((e) => '${e.count}x ${e.name}')
+                        .toList();
+
                     final input = AddProductInputEntity(
                       isAvailable: isAvailable,
-                      title: title,
+                      title: generatedTitle,
                       price: price,
                       oldPrice: oldPrice,
                       bagsLeft: bagsLeft,
                       rating: rating,
                       image: image!,
-                      detectedItems: (detectedFood ?? '')
-                          .split(', ')
-                          .where((s) => s.isNotEmpty)
-                          .toList(),
+                      detectedItems: detectedItemsStrings,
                     );
                     context.read<AddProductCubit>().addProduct(input);
                   } else {
