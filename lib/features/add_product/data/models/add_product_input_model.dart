@@ -91,4 +91,4 @@ class AddProductInputModel {
       'imageUrl': imageUrl,
     };
   }
-}
+}

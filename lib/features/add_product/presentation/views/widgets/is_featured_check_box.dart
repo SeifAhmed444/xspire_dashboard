@@ -9,17 +9,33 @@ class IsFeaturedCheckBox extends StatefulWidget {
     super.key,
     required this.onChanged,
     this.label = 'Is available',
+    this.value = false,
   });
 
   final ValueChanged<bool> onChanged;
   final String label;
+  final bool value;
 
   @override
   State<IsFeaturedCheckBox> createState() => _IsFeaturedCheckBoxState();
 }
 
 class _IsFeaturedCheckBoxState extends State<IsFeaturedCheckBox> {
-  bool _isChecked = false;
+  late bool _isChecked;
+
+  @override
+  void initState() {
+    super.initState();
+    _isChecked = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant IsFeaturedCheckBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _isChecked = widget.value;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
