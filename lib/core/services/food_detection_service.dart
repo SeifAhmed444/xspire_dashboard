@@ -63,10 +63,23 @@ class FoodDetectionService {
     return null;
   }
 
+  String _formatRawLabel(String label) {
+    // Remove underscores and capitalize words
+    return label.replaceAll('_', ' ').split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Future<void> init() async {
-    _interpreter = await Interpreter.fromAsset('assets/tflite/food_model.tflite');
-    final String labelsData = await rootBundle.loadString('assets/tflite/labels.txt');
-    _labels = labelsData.split('\n').where((s) => s.trim().isNotEmpty).toList();
+    try {
+      _interpreter = await Interpreter.fromAsset('assets/tflite/food_model.tflite');
+      final String labelsData = await rootBundle.loadString('assets/tflite/labels.txt');
+      _labels = labelsData.split('\n').where((s) => s.trim().isNotEmpty).toList();
+      debugPrint("✅ TFLite Model loaded successfully with ${_labels?.length} labels.");
+    } catch (e) {
+      debugPrint("❌ Failed to load TFLite model: $e");
+    }
   }
 
   Future<CustomDetectionResult?> detectFood(File imageFile) async {
@@ -90,7 +103,8 @@ class FoodDetectionService {
       img.Image resizedImage = img.copyResize(originalImage, width: 224, height: 224);
 
       var inputTensor = _interpreter!.getInputTensor(0);
-      bool isQuantized = inputTensor.type.toString().toLowerCase().contains('int8');
+      String inType = inputTensor.type.toString().toLowerCase();
+      bool isQuantized = inType.contains('int8') || inType.contains('uint8');
 
       var input;
       if (isQuantized) {
@@ -115,8 +129,9 @@ class FoodDetectionService {
         }
       }
       
-      var outputTensor = _interpreter! .getOutputTensor(0);
-      bool isOutputQuantized = outputTensor.type.toString().toLowerCase().contains('int8');
+      var outputTensor = _interpreter!.getOutputTensor(0);
+      String outType = outputTensor.type.toString().toLowerCase();
+      bool isOutputQuantized = outType.contains('int8') || outType.contains('uint8');
       var output;
 
       if (isOutputQuantized) {
@@ -138,6 +153,9 @@ class FoodDetectionService {
       // Sort descending by score
       indexedScores.sort((a, b) => b.value.compareTo(a.value));
 
+      String? topRawLabel;
+      double topRawScore = 0.0;
+
       // Look through the top 5 highest confidence predictions
       for (int i = 0; i < 5 && i < indexedScores.length; i++) {
         int labelIndex = indexedScores[i].key;
@@ -148,16 +166,29 @@ class FoodDetectionService {
            continue;
         }
         
+        // Save the first valid raw label as a fallback
+        if (topRawLabel == null) {
+          topRawLabel = rawLabel;
+          topRawScore = score;
+        }
+
         String? translated = _translateToEgyptian(rawLabel);
         if (translated != null) {
           // Found a valid Egyptian dish in the top 5!
           return CustomDetectionResult(translated, score);
         }
       }
+      
+      // If we reach here, no Egyptian dish was found in the top 5.
+      // Return the best raw label so we don't get 'Food item' default.
+      if (topRawLabel != null) {
+        return CustomDetectionResult(_formatRawLabel(topRawLabel), topRawScore);
+      }
+
       return null;
     } catch (e) {
       debugPrint("TFLite Error: $e");
-      throw Exception("Model error: $e");
+      return null;
     }
   }
 
