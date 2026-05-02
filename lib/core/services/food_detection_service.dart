@@ -63,7 +63,6 @@ class FoodDetectionService {
     return null;
   }
 
-<<<<<<< HEAD
   String _formatRawLabel(String label) {
     // Remove underscores and capitalize words
     return label.replaceAll('_', ' ').split(' ').map((word) {
@@ -190,7 +189,7 @@ class FoodDetectionService {
     } catch (e) {
       debugPrint("TFLite Error: $e");
       return null;
-    }   }
+    }
   }
 
   Uint8List _imageToByteListFloat32(img.Image image, int inputSize, double mean, double std) {
