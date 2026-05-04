@@ -55,7 +55,7 @@ class RestaurantCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          restaurant.name,
+                          restaurant.displayName,
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -76,13 +76,13 @@ class RestaurantCard extends StatelessWidget {
                   // ── Meta info ─────────────────────────────────────────
                   _InfoRow(
                     icon: Icons.store_mall_directory_outlined,
-                    label: '${restaurant.branches} branches',
+                    label: restaurant.branchesDisplay,
                     color: AppColors.primaryColor,
                   ),
                   const SizedBox(height: 3),
                   _InfoRow(
                     icon: Icons.location_on_outlined,
-                    label: restaurant.distance,
+                    label: restaurant.branchLocation,
                     color: AppColors.secoundryColor,
                   ),
                   const SizedBox(height: 3),

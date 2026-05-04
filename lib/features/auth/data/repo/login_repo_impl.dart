@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:xspire_dashboard/constant.dart';
 import 'package:xspire_dashboard/core/errors/failures.dart';
 import 'package:xspire_dashboard/core/services/app_user.dart';
@@ -6,28 +7,75 @@ import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dar
 import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/features/auth/domain/repo/login_repo.dart';
 
-final Map<String, String> emailAndPassword = {
-  'belal@gmail.com': '123456789',
-  'seif@gmail.com': '123456780',
-};
-
 class LoginRepoImpl implements LoginRepo {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Future<Either<Failure, AppUser>> login(String email, String password) async {
-    final savedPassword = emailAndPassword[email];
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (savedPassword != null && savedPassword == password) {
+      final user = credential.user;
+      if (user == null) {
+        return left(ServerFailure("Authentication failed"));
+      }
+
       await Prefs.setBool(isloggedin, true);
-
-      // ── Persist email so UserSession can be restored after a cold start ──
       await Prefs.saveEmail(email);
+      UserSession.instance.setUser(email, userId: user.uid);
 
-      final userId = 'manual_${email.split('@').first}';
-      UserSession.instance.setUser(email, userId: userId);
+      return right(AppUser(id: user.uid, email: email));
+    } on FirebaseAuthException catch (e) {
+      String message = "Login failed";
+      switch (e.code) {
+        case 'user-not-found':
+          message = "No user found with this email";
+          break;
+        case 'wrong-password':
+          message = "Wrong password";
+          break;
+        case 'invalid-email':
+          message = "Invalid email format";
+          break;
+        case 'user-disabled':
+          message = "This account has been disabled";
+          break;
+        default:
+          message = e.message ?? "Authentication error";
+      }
+      return left(ServerFailure(message));
+    } catch (e) {
+      return left(ServerFailure("Unexpected error: $e"));
+    }
+  }
 
-      return right(AppUser(id: userId, email: email));
-    } else {
-      return left(ServerFailure("Not a managed user"));
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _auth.signOut();
+      await Prefs.setBool(isloggedin, false);
+      UserSession.instance.clear();
+      return const Right(null);
+    } catch (e) {
+      return left(ServerFailure("Logout failed: $e"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppUser?>> checkAuthStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final email = user.email ?? '';
+        UserSession.instance.setUser(email, userId: user.uid);
+        return right(AppUser(id: user.uid, email: email));
+      }
+      return right(null);
+    } catch (e) {
+      return left(ServerFailure("Auth check failed: $e"));
     }
   }
 }

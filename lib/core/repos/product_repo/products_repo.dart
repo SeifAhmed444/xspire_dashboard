@@ -12,6 +12,10 @@ abstract class ProductsRepo {
     String? userEmail, 
   });
 
+  Future<Either<Failure, List<AddProductInputEntity>>> getProductsByRestaurant({
+    required String restaurantId,
+  });
+
   Future<Either<Failure, void>> updateProduct(
     String docId,
     AddProductInputEntity addProductInputEntity,

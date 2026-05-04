@@ -10,3 +10,5 @@ class LoginfailureState extends LoginState {
 }
 
 class LoginSuccesState extends LoginState {}
+
+class LogoutSuccessState extends LoginState {}

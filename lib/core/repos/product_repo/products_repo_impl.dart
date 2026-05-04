@@ -54,6 +54,28 @@ class ProductsRepoImpl implements ProductsRepo {
   }
 
   @override
+  Future<Either<Failure, List<AddProductInputEntity>>> getProductsByRestaurant({
+    required String restaurantId,
+  }) async {
+    try {
+      final data = await databaseServies.getData(
+        path: BackendEndpoints.productCollection,
+        query: {'where': 'restaurantId', 'isEqualTo': restaurantId},
+      );
+
+      final List<AddProductInputEntity> products = (data as List)
+          .map((item) => AddProductInputModel.fromJson(
+                item as Map<String, dynamic>,
+              ).toEntity())
+          .toList();
+
+      return Right(products);
+    } catch (e) {
+      return Left(ServerFailure('Failed to fetch products for restaurant'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> updateProduct(
     String docId,
     AddProductInputEntity entity,

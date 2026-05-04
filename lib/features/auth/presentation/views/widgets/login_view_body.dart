@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
 import 'package:xspire_dashboard/core/widgets/special_login_button.dart';
-import 'package:xspire_dashboard/features/auth/data/repo/login_repo_impl.dart';
 import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
 
 class LoginViewBody extends StatefulWidget {
@@ -20,8 +19,11 @@ class _LoginViewBodyState extends State<LoginViewBody> {
   late String email, password;
   bool _isLoading = false;
 
-  List<MapEntry<String, String>> get _demoAccounts =>
-      emailAndPassword.entries.toList();
+  // Test accounts for Firebase Auth
+  final List<MapEntry<String, String>> _demoAccounts = const [
+    MapEntry('belal@gmail.com', '123456789'),
+    MapEntry('seif@gmail.com', '123456780'),
+  ];
 
   @override
   void dispose() {

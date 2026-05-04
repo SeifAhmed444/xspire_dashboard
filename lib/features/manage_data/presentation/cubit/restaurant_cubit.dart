@@ -27,8 +27,10 @@ class RestaurantCubit extends Cubit<RestaurantState> {
 
   // ── Fetch (on screen load) ────────────────────────────────────────────────
   Future<void> fetchRestaurants(String userEmail) async {
+    if (isClosed) return;
     emit(RestaurantLoading());
     final result = await fetchRestaurantsUseCase(userEmail);
+    if (isClosed) return;
     result.fold(
       (failure) => emit(RestaurantError(failure.message)),
       (list) {
@@ -38,11 +40,10 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     );
   }
 
-  // ── Add ───────────────────────────────────────────────────────────────────
-  Future<void> addRestaurant({
+  // ── Add multiple restaurants (one per branch) ─────────────────────────────
+  Future<void> addRestaurantsWithBranches({
     required String name,
-    required String branches,
-    required String distance,
+    required List<String> branchLocations,
     required bool isOpend,
     required bool isAvailable,
     required String userEmail,
@@ -66,27 +67,44 @@ class RestaurantCubit extends Cubit<RestaurantState> {
         if (uploadFailed) return;
       }
 
-      // 2. Build entity and persist
-      final entity = RestaurantEntity(
-        name: name,
-        branches: branches,
-        distance: distance,
-        isOpend: isOpend,
-        isAvailable: isAvailable,
-        imageUrl: imageUrl,
-        userEmail: userEmail,
-      );
+      final totalBranches = branchLocations.length;
+      final savedRestaurants = <RestaurantEntity>[];
 
-      final result = await addRestaurantUseCase(entity);
-      result.fold(
-        (failure) =>
-            emit(RestaurantError(failure.message, restaurants: _localList)),
-        (saved) {
-          // 3. Optimistic local update
-          _localList = [saved, ..._localList];
-          emit(RestaurantOperationSuccess(_localList, 'Restaurant added successfully'));
-        },
-      );
+      // 2. Create a restaurant for each branch
+      for (int i = 0; i < branchLocations.length; i++) {
+        final entity = RestaurantEntity(
+          name: name,
+          branchLocation: branchLocations[i],
+          totalBranches: totalBranches,
+          branchIndex: i + 1,
+          isOpend: isOpend,
+          isAvailable: isAvailable,
+          imageUrl: imageUrl,
+          userEmail: userEmail,
+        );
+
+        final result = await addRestaurantUseCase(entity);
+        final success = result.fold(
+          (failure) {
+            emit(RestaurantError(failure.message, restaurants: _localList));
+            return null;
+          },
+          (saved) => saved,
+        );
+        
+        if (success != null) {
+          savedRestaurants.add(success);
+        }
+      }
+
+      // 3. Optimistic local update with all saved restaurants
+      if (savedRestaurants.isNotEmpty) {
+        _localList = [...savedRestaurants, ..._localList];
+        final msg = savedRestaurants.length == 1
+            ? 'Restaurant added successfully'
+            : '${savedRestaurants.length} branches added successfully';
+        emit(RestaurantOperationSuccess(_localList, msg));
+      }
     } catch (e) {
       emit(RestaurantError('Unexpected error: $e', restaurants: _localList));
     }
@@ -96,8 +114,8 @@ class RestaurantCubit extends Cubit<RestaurantState> {
   Future<void> updateRestaurant({
     required RestaurantEntity existing,
     required String name,
-    required String branches,
-    required String distance,
+    required String branchLocation,
+    required int totalBranches,
     required bool isOpend,
     required bool isAvailable,
     File? newImageFile,
@@ -122,8 +140,8 @@ class RestaurantCubit extends Cubit<RestaurantState> {
 
       final updated = existing.copyWith(
         name: name,
-        branches: branches,
-        distance: distance,
+        branchLocation: branchLocation,
+        totalBranches: totalBranches,
         isOpend: isOpend,
         isAvailable: isAvailable,
         imageUrl: imageUrl,
@@ -162,13 +180,17 @@ class RestaurantCubit extends Cubit<RestaurantState> {
         _localList = backup;
         emit(RestaurantError(failure.message, restaurants: _localList));
       },
-      (_) => emit(
-          RestaurantOperationSuccess(_localList, 'Restaurant deleted')),
+      (_) {
+        if (!isClosed) {
+          emit(RestaurantOperationSuccess(_localList, 'Restaurant deleted'));
+        }
+      },
     );
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   void _emitListState({RestaurantState? override}) {
+    if (isClosed) return;
     if (override != null) {
       emit(override);
       return;

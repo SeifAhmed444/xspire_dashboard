@@ -21,13 +21,14 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nameCtrl;
-  late final TextEditingController _branchesCtrl;
-  late final TextEditingController _distanceCtrl;
+  late final TextEditingController _branchesCountCtrl;
+  final List<TextEditingController> _branchLocationCtrls = [];
 
   bool _isOpend = false;
   bool _isAvailable = false;
   File? _pickedImage;
   bool _isSubmitting = false;
+  int _branchCount = 1;
 
   bool get _isEdit => widget.existing != null;
 
@@ -36,8 +37,19 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     super.initState();
     final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
-    _branchesCtrl = TextEditingController(text: e?.branches ?? '');
-    _distanceCtrl = TextEditingController(text: e?.distance ?? '');
+    
+    // For edit mode, use the existing branch info
+    if (_isEdit && e != null) {
+      _branchCount = e.totalBranches;
+      _branchesCountCtrl = TextEditingController(text: e.totalBranches.toString());
+      // Add one controller for this branch's location
+      _branchLocationCtrls.add(TextEditingController(text: e.branchLocation));
+    } else {
+      _branchesCountCtrl = TextEditingController(text: '1');
+      _branchCount = 1;
+      _branchLocationCtrls.add(TextEditingController());
+    }
+    
     _isOpend = e?.isOpend ?? false;
     _isAvailable = e?.isAvailable ?? false;
   }
@@ -45,8 +57,10 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _branchesCtrl.dispose();
-    _distanceCtrl.dispose();
+    _branchesCountCtrl.dispose();
+    for (final ctrl in _branchLocationCtrls) {
+      ctrl.dispose();
+    }
     super.dispose();
   }
 
@@ -124,19 +138,17 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                         ),
                         const SizedBox(height: 14),
                         _buildField(
-                          controller: _branchesCtrl,
+                          controller: _branchesCountCtrl,
                           label: 'Number of Branches',
-                          hint: 'e.g. 5',
+                          hint: 'e.g. 2',
                           icon: Icons.store_mall_directory_outlined,
                           keyboardType: TextInputType.number,
+                          onChanged: _onBranchCountChanged,
                         ),
                         const SizedBox(height: 14),
-                        _buildField(
-                          controller: _distanceCtrl,
-                          label: 'Distance / Location',
-                          hint: 'e.g. 2.5 km from city center',
-                          icon: Icons.location_on_outlined,
-                        ),
+                        
+                        // ── Dynamic Branch Location Fields ──────────────
+                        ..._buildBranchLocationFields(),
                         const SizedBox(height: 16),
 
                         // ── Toggles ───────────────────────────────────────
@@ -181,6 +193,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,6 +207,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          onChanged: onChanged,
           validator: (v) =>
               (v == null || v.trim().isEmpty) ? '$label is required' : null,
           decoration: InputDecoration(
@@ -391,27 +405,72 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     );
   }
 
+  void _onBranchCountChanged(String value) {
+    final count = int.tryParse(value) ?? 1;
+    if (count < 1) return;
+    
+    setState(() {
+      // Adjust the number of controllers
+      if (count > _branchLocationCtrls.length) {
+        // Add new controllers
+        for (int i = _branchLocationCtrls.length; i < count; i++) {
+          _branchLocationCtrls.add(TextEditingController());
+        }
+      } else if (count < _branchLocationCtrls.length) {
+        // Remove excess controllers
+        for (int i = _branchLocationCtrls.length - 1; i >= count; i--) {
+          _branchLocationCtrls[i].dispose();
+          _branchLocationCtrls.removeAt(i);
+        }
+      }
+      _branchCount = count;
+    });
+  }
+
+  List<Widget> _buildBranchLocationFields() {
+    return List.generate(_branchLocationCtrls.length, (index) {
+      return Column(
+        children: [
+          _buildField(
+            controller: _branchLocationCtrls[index],
+            label: 'Branch ${index + 1} Location',
+            hint: 'e.g. Zamalek, 2 Taha Hussein',
+            icon: Icons.location_on_outlined,
+          ),
+          const SizedBox(height: 12),
+        ],
+      );
+    });
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
     final cubit = context.read<RestaurantCubit>();
+    final name = _nameCtrl.text.trim();
+    final totalBranches = int.tryParse(_branchesCountCtrl.text) ?? 1;
 
     if (_isEdit) {
+      // Update single branch
       cubit.updateRestaurant(
         existing: widget.existing!,
-        name: _nameCtrl.text.trim(),
-        branches: _branchesCtrl.text.trim(),
-        distance: _distanceCtrl.text.trim(),
+        name: name,
+        branchLocation: _branchLocationCtrls[0].text.trim(),
+        totalBranches: totalBranches,
         isOpend: _isOpend,
         isAvailable: _isAvailable,
         newImageFile: _pickedImage,
       );
     } else {
-      cubit.addRestaurant(
-        name: _nameCtrl.text.trim(),
-        branches: _branchesCtrl.text.trim(),
-        distance: _distanceCtrl.text.trim(),
+      // Add multiple restaurants - one for each branch
+      final branchLocations = _branchLocationCtrls
+          .map((ctrl) => ctrl.text.trim())
+          .toList();
+      
+      cubit.addRestaurantsWithBranches(
+        name: name,
+        branchLocations: branchLocations,
         isOpend: _isOpend,
         isAvailable: _isAvailable,
         userEmail: UserSession.instance.currentEmail,
