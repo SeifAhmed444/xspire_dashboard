@@ -5,25 +5,29 @@ class AddProductInputEntity {
   final bool isAvailable;
   final String title;
   final double price;
-  final double oldPrice;
+  final double? oldPrice;
   final int bagsLeft;
-  final double rating;
   final List<String>? detectedItems;
   final File? image;
   String? imageUrl;
   String? userEmail;
+  String? restaurantId;
+  String? restaurantName;
+  final String? pickupTime;
 
   AddProductInputEntity({
     this.docId,
     required this.isAvailable,
     required this.title,
     required this.price,
-    required this.oldPrice,
+    this.oldPrice,
     required this.bagsLeft,
-    required this.rating,
     this.detectedItems,
     this.image,
     this.imageUrl,
     this.userEmail,
+    this.restaurantId,
+    this.restaurantName,
+    this.pickupTime,
   });
 }

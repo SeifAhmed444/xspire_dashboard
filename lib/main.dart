@@ -1,8 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:xspire_dashboard/constant.dart';
 import 'package:xspire_dashboard/core/helper_functions/on_generate_routes.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
+import 'package:xspire_dashboard/core/localization/locale_cubit.dart';
 import 'package:xspire_dashboard/core/services/custom_bolc_observer.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dart';
@@ -46,11 +49,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLoggedIn = Prefs.getBool(isloggedin) && UserSession.instance.isLoggedIn;
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: isLoggedIn ? DashboardView.routeName : LoginView.routeName,
-      onGenerateRoute: onGenerateRoutes,
-      theme: _buildAppTheme(),
+    return BlocProvider(
+      create: (_) => LocaleCubit(),
+      child: BlocBuilder<LocaleCubit, Locale>(
+        builder: (context, locale) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            initialRoute: isLoggedIn ? DashboardView.routeName : LoginView.routeName,
+            onGenerateRoute: onGenerateRoutes,
+            theme: _buildAppTheme(),
+            locale: locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ar'),
+            ],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+          );
+        },
+      ),
     );
   }
 

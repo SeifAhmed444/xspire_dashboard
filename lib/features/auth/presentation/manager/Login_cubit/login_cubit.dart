@@ -15,4 +15,28 @@ class LoginCubit extends Cubit<LoginState> {
       (r) => emit(LoginSuccesState()),
     );
   }
+
+  Future<void> logout() async {
+    emit(LoginLoadingState());
+    var result = await loginRepo.logout();
+    result.fold(
+      (l) => emit(LoginfailureState(l.message)),
+      (r) => emit(LogoutSuccessState()),
+    );
+  }
+
+  Future<void> checkAuthStatus() async {
+    emit(LoginLoadingState());
+    var result = await loginRepo.checkAuthStatus();
+    result.fold(
+      (l) => emit(LoginfailureState(l.message)),
+      (r) {
+        if (r != null) {
+          emit(LoginSuccesState());
+        } else {
+          emit(LoginInitial());
+        }
+      },
+    );
+  }
 }

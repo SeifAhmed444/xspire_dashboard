@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart';
 import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/restaurant_usecases.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/cubit/restaurant_cubit.dart';
-import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/manage_data_body.dart';
+import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/manage_restaurants_with_bags_body.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/restaurant_form_sheet.dart';
 
 class ManageDataView extends StatelessWidget {
@@ -39,9 +40,9 @@ class _ManageDataScaffold extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          'Manage Restaurants',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        title: Text(
+          AppLocalizations.of(context).manageRestaurants,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
@@ -56,7 +57,7 @@ class _ManageDataScaffold extends StatelessWidget {
           ),
         ],
       ),
-      body: const ManageDataBody(),
+      body: const ManageRestaurantsWithBagsBody(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           final cubit = context.read<RestaurantCubit>();
@@ -72,9 +73,9 @@ class _ManageDataScaffold extends StatelessWidget {
         },
         backgroundColor: AppColors.primaryColor,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Add Restaurant',
-          style: TextStyle(
+        label: Text(
+          AppLocalizations.of(context).addRestaurant,
+          style: const TextStyle(
               color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),

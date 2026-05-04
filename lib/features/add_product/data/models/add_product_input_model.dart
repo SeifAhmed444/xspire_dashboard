@@ -6,26 +6,30 @@ class AddProductInputModel {
   final bool isAvailable;
   final String title;
   final double price;
-  final double oldPrice;
+  final double? oldPrice;
   final int bagsLeft;
-  final double rating;
   final List<String>? detectedItems;
   final String? userEmail;
   final File? image;
   String? imageUrl;
+  final String? restaurantId;
+  final String? restaurantName;
+  final String? pickupTime;
 
   AddProductInputModel({
     this.docId,
     required this.isAvailable,
     required this.title,
     required this.price,
-    required this.oldPrice,
+    this.oldPrice,
     required this.bagsLeft,
-    required this.rating,
     this.detectedItems,
     this.userEmail,
     this.image,
     this.imageUrl,
+    this.restaurantId,
+    this.restaurantName,
+    this.pickupTime,
   });
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
@@ -36,11 +40,13 @@ class AddProductInputModel {
       price: entity.price,
       oldPrice: entity.oldPrice,
       bagsLeft: entity.bagsLeft,
-      rating: entity.rating,
       detectedItems: entity.detectedItems,
       userEmail: entity.userEmail,
       image: entity.image,
       imageUrl: entity.imageUrl,
+      restaurantId: entity.restaurantId,
+      restaurantName: entity.restaurantName,
+      pickupTime: entity.pickupTime,
     );
   }
 
@@ -50,14 +56,16 @@ class AddProductInputModel {
       isAvailable: json['isAvailable'] as bool? ?? false,
       title: json['title'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      oldPrice: (json['oldPrice'] as num?)?.toDouble() ?? 0.0,
+      oldPrice: (json['oldPrice'] as num?)?.toDouble(),
       bagsLeft: json['bagsLeft'] as int? ?? 0,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       detectedItems: (json['detectedItems'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
       userEmail: json['userEmail'] as String?,
       imageUrl: json['imageUrl'] as String?,
+      restaurantId: json['restaurantId'] as String?,
+      restaurantName: json['restaurantName'] as String?,
+      pickupTime: json['pickupTime'] as String?,
     );
   }
 
@@ -69,11 +77,13 @@ class AddProductInputModel {
       price: price,
       oldPrice: oldPrice,
       bagsLeft: bagsLeft,
-      rating: rating,
+      pickupTime: pickupTime,
       detectedItems: detectedItems,
       userEmail: userEmail,
       image: image,
       imageUrl: imageUrl,
+      restaurantId: restaurantId,
+      restaurantName: restaurantName,
     );
   }
 
@@ -83,12 +93,14 @@ class AddProductInputModel {
       'isAvailable': isAvailable,
       'title': title,
       'price': price,
-      'oldPrice': oldPrice,
       'bagsLeft': bagsLeft,
-      'rating': rating,
       'detectedItems': detectedItems,
       'userEmail': userEmail,
       'imageUrl': imageUrl,
+      'restaurantId': restaurantId,
+      'restaurantName': restaurantName,
+      'oldPrice': oldPrice,
+      'pickupTime': pickupTime,
     };
   }
 }

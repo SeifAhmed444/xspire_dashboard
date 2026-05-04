@@ -120,9 +120,7 @@ class AddProductCubit extends Cubit<AddProductState> {
         'userEmail'    : entity.userEmail,
         'title'        : entity.title,
         'price'        : entity.price,
-        'oldPrice'     : entity.oldPrice,
         'bagsLeft'     : entity.bagsLeft,
-        'rating'       : entity.rating,
         'detectedItems': entity.detectedItems ?? [],
       });
 

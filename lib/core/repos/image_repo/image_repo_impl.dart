@@ -19,8 +19,7 @@ class ImageRepoImpl implements ImageRepo {
       return Right(url);
     } catch (e) {
       print("ImageRepoImpl error: $e");
-      return Left(ServerFailure('Failed to upload image'),
-      );
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

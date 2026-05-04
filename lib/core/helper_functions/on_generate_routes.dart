@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/add_product_view.dart';
 import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
-import 'package:xspire_dashboard/features/products/presentation/views/edit_product_view.dart';
-import 'package:xspire_dashboard/features/products/domain/entities/product_entity.dart';
-import 'package:xspire_dashboard/features/products/presentation/views/products_list_view.dart';
-import 'package:xspire_dashboard/features/products/presentation/views/add_item_view.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
+import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/add_restaurant_simple.dart';
 
 Route<dynamic> onGenerateRoutes(RouteSettings settings) {
   switch (settings.name) {
@@ -25,25 +22,14 @@ Route<dynamic> onGenerateRoutes(RouteSettings settings) {
         builder: (_) => const AddProductView(),
       );
 
-    case ProductsListView.routeName:
-      return MaterialPageRoute(
-        builder: (_) => const ProductsListView(),
-      );
-
-    case AddItemView.routeName:
-      return MaterialPageRoute(
-        builder: (_) => const AddItemView(),
-      );
-
     case ManageDataView.routeName:
       return MaterialPageRoute(
         builder: (_) => const ManageDataView(),
       );
 
-    case EditProductView.routeName:
-      final product = settings.arguments as ProductEntity;
+    case AddRestaurantSimple.routeName:
       return MaterialPageRoute(
-        builder: (_) => EditProductView(product: product),
+        builder: (_) => const AddRestaurantSimplePage(),
       );
 
     default:

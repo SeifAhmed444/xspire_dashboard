@@ -21,14 +21,6 @@ import 'package:xspire_dashboard/features/manage_data/data/repos/restaurant_repo
 import 'package:xspire_dashboard/features/manage_data/domain/repos/restaurant_repository.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/restaurant_usecases.dart';
 
-// ── Products — NEW clean-arch feature ─────────────────────────────────────────
-import 'package:xspire_dashboard/features/products/data/repos/product_repo_impl.dart';
-import 'package:xspire_dashboard/features/products/domain/repos/product_repo.dart';
-import 'package:xspire_dashboard/features/products/domain/usecases/add_product_usecase.dart';
-import 'package:xspire_dashboard/features/products/domain/usecases/delete_product_usecase.dart';
-import 'package:xspire_dashboard/features/products/domain/usecases/get_products_usecase.dart';
-import 'package:xspire_dashboard/features/products/domain/usecases/update_product_usecase.dart';
-
 final getIt = GetIt.instance;
 
 void setupGetIt() {
@@ -37,7 +29,7 @@ void setupGetIt() {
   getIt.registerSingleton<DatabaseServies>(FirestoreServices());
   getIt.registerSingleton<FoodDetectionService>(FoodDetectionService()..init());
 
-  // ── Legacy repos (kept for AddProductCubit / ProductCubit) ────────────────
+  // ── Legacy repos (kept for AddProductCubit) ───────────────────────────────
   getIt.registerSingleton<ImageRepo>(
       ImageRepoImpl(getIt.get<StorageService>()));
   getIt.registerSingleton<ProductsRepo>(
@@ -67,20 +59,5 @@ void setupGetIt() {
   );
   getIt.registerSingleton<UploadRestaurantImageUseCase>(
     UploadRestaurantImageUseCase(getIt.get<RestaurantRepository>()),
-  );
-
-  // ── Products feature (Clean Arch) ─────────────────────────────────────────
-  getIt.registerSingleton<ProductRepo>(ProductRepoImpl());
-  getIt.registerSingleton<AddProductUseCase>(
-    AddProductUseCase(getIt.get<ProductRepo>()),
-  );
-  getIt.registerSingleton<GetProductsUseCase>(
-    GetProductsUseCase(getIt.get<ProductRepo>()),
-  );
-  getIt.registerSingleton<UpdateProductUseCase>(
-    UpdateProductUseCase(getIt.get<ProductRepo>()),
-  );
-  getIt.registerSingleton<DeleteProductUseCase>(
-    DeleteProductUseCase(getIt.get<ProductRepo>()),
   );
 }

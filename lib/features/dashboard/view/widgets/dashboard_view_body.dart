@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:xspire_dashboard/constant.dart';
-import 'package:xspire_dashboard/core/services/shared_preferences_singletone.dart';
-import 'package:xspire_dashboard/core/services/user_session.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
+import 'package:xspire_dashboard/core/widgets/language_toggle_button.dart';
 import 'package:xspire_dashboard/core/widgets/special_logout_button.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/add_product_view.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_cubit.dart';
+import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_state.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
+import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/add_restaurant_simple.dart';
 
 class DashboardViewBody extends StatelessWidget {
   const DashboardViewBody({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state is LogoutSuccessState) {
+          Navigator.pushNamedAndRemoveUntil(
+              context, 'LoginView', (route) => false);
+        }
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
         slivers: [
@@ -21,6 +31,10 @@ class DashboardViewBody extends StatelessWidget {
             expandedHeight: 190,
             pinned: true,
             backgroundColor: AppColors.primaryColor,
+            actions: const [
+              LanguageToggleButton(),
+              SizedBox(width: 8),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -66,18 +80,18 @@ class DashboardViewBody extends StatelessWidget {
                                     color: Colors.white, size: 26),
                               ),
                               const SizedBox(width: 14),
-                              const Column(
+                              Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                 children: [
-                                  Text('XSpire Dashboard',
-                                      style: TextStyle(
+                                  Text(AppLocalizations.of(context).appTitle,
+                                      style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700)),
-                                  SizedBox(height: 2),
-                                  Text('Food Outlet Management',
-                                      style: TextStyle(
+                                  const SizedBox(height: 2),
+                                  Text(AppLocalizations.of(context).foodOutletManagement,
+                                      style: const TextStyle(
                                           color: Colors.white70,
                                           fontSize: 13)),
                                 ],
@@ -99,44 +113,80 @@ class DashboardViewBody extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 8),
-                const Text('Quick Actions',
-                    style: TextStyle(
+                Text(AppLocalizations.of(context).quickActions,
+                    style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1A1A2E))),
                 const SizedBox(height: 16),
 
-                // ── Two action cards ────────────────────────────────────
+                // ── Three action cards (2x2 grid) ──────────────────────
                 Row(
                   children: [
-                    // Add Restaurant
+                    // Add Bag Item
                     Expanded(
                       child: _ActionCard(
-                        icon: Icons.add_circle_outline_rounded,
-                        label: 'Add\nBag Item',
-                        subtitle: 'Add new bag item',
+                        icon: Icons.shopping_bag_outlined,
+                        label: AppLocalizations.of(context).addBagItemLabel,
+                        subtitle: AppLocalizations.of(context).scanAddBags,
                         gradient: AppColors.primaryGradient,
                         onTap: () => Navigator.pushNamed(
                             context, AddProductView.routeName),
                       ),
                     ),
                     const SizedBox(width: 14),
-                    // Manage Restaurants — now the single management entry
+                    // Add Restaurant
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.add_business_outlined,
+                        label: AppLocalizations.of(context).addRestaurantLabel,
+                        subtitle: AppLocalizations.of(context).createNewRestaurant,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        onTap: () => Navigator.pushNamed(
+                            context, AddRestaurantSimple.routeName),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    // Manage Restaurants
                     Expanded(
                       child: _ActionCard(
                         icon: Icons.manage_search_rounded,
-                        label: 'Manage\nRestaurants',
-                        subtitle: 'View, edit & delete',
+                        label: AppLocalizations.of(context).manageRestaurantsLabel,
+                        subtitle: AppLocalizations.of(context).viewEditDelete,
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF1565C0),
-                            Color(0xFF1976D2)
-                          ],
+                          colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         onTap: () => Navigator.pushNamed(
                             context, ManageDataView.routeName),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    // Placeholder for symmetry (or can add 4th action)
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.analytics_outlined,
+                        label: AppLocalizations.of(context).analyticsStatsLabel,
+                        subtitle: AppLocalizations.of(context).comingSoon,
+                        gradient: LinearGradient(
+                          colors: [Colors.grey.shade600, Colors.grey.shade500],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(AppLocalizations.of(context).comingSoon)),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -145,14 +195,8 @@ class DashboardViewBody extends StatelessWidget {
 
                 // ── Logout ──────────────────────────────────────────────
                 SpecialLogoutButton(
-                  onPressed: () async {
-                    await Prefs.setBool(isloggedin, false);
-                    await Prefs.clearEmail();
-                    UserSession.instance.clear();
-                    if (context.mounted) {
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, 'LoginView', (route) => false);
-                    }
+                  onPressed: () {
+                    context.read<LoginCubit>().logout();
                   },
                 ),
                 const SizedBox(height: 20),
@@ -160,6 +204,7 @@ class DashboardViewBody extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
