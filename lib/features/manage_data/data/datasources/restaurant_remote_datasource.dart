@@ -83,59 +83,55 @@ class RestaurantRemoteDatasourceImpl implements RestaurantRemoteDatasource {
   @override
   Future<void> deleteRestaurant(String docId) async {
     try {
-      // 1) Find and delete all products that belong to this restaurant
-      final productsSnapshot = await _firestore
-          .collection(BackendEndpoints.productCollection)
-          .where('restaurantId', isEqualTo: docId)
+      // Fetch restaurant to get nested products array
+      final restaurantDoc = await _firestore
+          .collection(_collection)
+          .doc(docId)
           .get();
 
-      for (final pDoc in productsSnapshot.docs) {
-        final data = pDoc.data();
+      if (restaurantDoc.exists) {
+        final data = restaurantDoc.data();
+        final products = data?['products'] as List<dynamic>? ?? [];
 
-        // Attempt to remove image from Supabase if imageUrl points to our bucket
-        try {
-          final imageUrl = data['imageUrl'] as String?;
-          if (imageUrl != null && imageUrl.isNotEmpty) {
-            String? storagePath;
+        // Delete product images from Supabase
+        for (final product in products) {
+          final productData = product as Map<String, dynamic>?;
+          if (productData != null) {
+            try {
+              final imageUrl = productData['imageUrl'] as String?;
+              if (imageUrl != null && imageUrl.isNotEmpty) {
+                String? storagePath;
 
-            // common Supabase public url contains '/food_images/' followed by the stored path
-            final marker = '/food_images/';
-            final idx = imageUrl.indexOf(marker);
-            if (idx != -1 && idx + marker.length < imageUrl.length) {
-              storagePath = imageUrl.substring(idx + marker.length);
-            } else {
-              // try another common pattern
-              const alt = 'storage/v1/object/public/food_images/';
-              final idx2 = imageUrl.indexOf(alt);
-              if (idx2 != -1 && idx2 + alt.length < imageUrl.length) {
-                storagePath = imageUrl.substring(idx2 + alt.length);
+                // common Supabase public url contains '/food_images/' followed by the stored path
+                final marker = '/food_images/';
+                final idx = imageUrl.indexOf(marker);
+                if (idx != -1 && idx + marker.length < imageUrl.length) {
+                  storagePath = imageUrl.substring(idx + marker.length);
+                } else {
+                  // try another common pattern
+                  const alt = 'storage/v1/object/public/food_images/';
+                  final idx2 = imageUrl.indexOf(alt);
+                  if (idx2 != -1 && idx2 + alt.length < imageUrl.length) {
+                    storagePath = imageUrl.substring(idx2 + alt.length);
+                  }
+                }
+
+                if (storagePath != null && storagePath.isNotEmpty) {
+                  try {
+                    await _supabase.client.storage.from(_bucket).remove([
+                      storagePath,
+                    ]);
+                  } catch (_) {
+                    // ignore individual storage deletion errors
+                  }
+                }
               }
-            }
-
-            if (storagePath != null && storagePath.isNotEmpty) {
-              try {
-                await _supabase.client.storage.from(_bucket).remove([
-                  storagePath,
-                ]);
-              } catch (_) {
-                // ignore individual storage deletion errors
-              }
-            }
+            } catch (_) {}
           }
-        } catch (_) {}
-
-        // Delete product document from Firestore
-        try {
-          await _firestore
-              .collection(BackendEndpoints.productCollection)
-              .doc(pDoc.id)
-              .delete();
-        } catch (_) {
-          // ignore individual product deletion errors and continue
         }
       }
 
-      // 2) Delete the restaurant document itself
+      // Delete the restaurant document (nested products will be deleted with it)
       await _firestore.collection(_collection).doc(docId).delete();
     } catch (e) {
       throw CustomException(message: 'Failed to delete restaurant: $e');
