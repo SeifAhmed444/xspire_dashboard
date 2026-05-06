@@ -11,7 +11,7 @@ import 'package:xspire_dashboard/features/manage_data/presentation/cubit/restaur
 
 class AddRestaurantSimple extends StatefulWidget {
   static const routeName = 'add_restaurant_simple';
-  
+
   const AddRestaurantSimple({super.key});
 
   @override
@@ -42,7 +42,7 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
   final _nameController = TextEditingController();
   final _branchesCountController = TextEditingController(text: '1');
   final _branchLocationController = TextEditingController();
-  
+
   File? _logoImage;
   bool _isAvailable = true;
   bool _isOpenNow = true;
@@ -62,14 +62,22 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
         if (state is RestaurantOperationSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Text(state.message),
-              ]),
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(state.message),
+                ],
+              ),
               backgroundColor: AppColors.successColor,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
           // Pop after success
@@ -83,7 +91,9 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
               content: Text(state.message),
               backgroundColor: AppColors.errorColor,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
@@ -106,7 +116,7 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
         body: BlocBuilder<RestaurantCubit, RestaurantState>(
           builder: (context, state) {
             final isLoading = state is RestaurantOperationLoading;
-            
+
             return Form(
               key: _formKey,
               child: Column(
@@ -127,7 +137,9 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.05),
@@ -139,18 +151,28 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                                 child: _logoImage != null
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(20),
-                                        child: Image.file(_logoImage!, fit: BoxFit.cover),
+                                        child: Image.file(
+                                          _logoImage!,
+                                          fit: BoxFit.cover,
+                                        ),
                                       )
                                     : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.add_photo_alternate_outlined,
-                                              size: 40, color: Colors.grey.shade400),
+                                          Icon(
+                                            Icons.add_photo_alternate_outlined,
+                                            size: 40,
+                                            color: Colors.grey.shade400,
+                                          ),
                                           const SizedBox(height: 8),
-                                          Text('Add Logo',
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey.shade500)),
+                                          Text(
+                                            'Add Logo',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                          ),
                                         ],
                                       ),
                               ),
@@ -163,8 +185,12 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                             controller: _nameController,
                             hintText: 'Restaurant Name (e.g. Madbina)',
                             textInputType: TextInputType.text,
-                            prefixIcon: Icon(Icons.restaurant, color: Colors.grey.shade500),
-                            validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                            prefixIcon: Icon(
+                              Icons.restaurant,
+                              color: Colors.grey.shade500,
+                            ),
+                            validator: (v) =>
+                                v?.isEmpty == true ? 'Required' : null,
                           ),
                           const SizedBox(height: 16),
 
@@ -173,18 +199,27 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                             controller: _branchesCountController,
                             hintText: 'Number of Branches',
                             textInputType: TextInputType.number,
-                            prefixIcon: Icon(Icons.store_mall_directory_outlined, color: Colors.grey.shade500),
-                            validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                            prefixIcon: Icon(
+                              Icons.store_mall_directory_outlined,
+                              color: Colors.grey.shade500,
+                            ),
+                            validator: (v) =>
+                                v?.isEmpty == true ? 'Required' : null,
                           ),
                           const SizedBox(height: 16),
 
                           // Branch Location
                           CustomTextFormField(
                             controller: _branchLocationController,
-                            hintText: 'Branch Location (e.g. Zamalek, 2 Taha Hussein)',
+                            hintText:
+                                'Branch Location (e.g. Zamalek, 2 Taha Hussein)',
                             textInputType: TextInputType.text,
-                            prefixIcon: Icon(Icons.location_on_outlined, color: Colors.grey.shade500),
-                            validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                            prefixIcon: Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.grey.shade500,
+                            ),
+                            validator: (v) =>
+                                v?.isEmpty == true ? 'Required' : null,
                           ),
                           const SizedBox(height: 24),
 
@@ -243,13 +278,20 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
     );
   }
 
-  Widget _buildToggle(String label, bool value, IconData icon, Function(bool) onChanged) {
+  Widget _buildToggle(
+    String label,
+    bool value,
+    IconData icon,
+    Function(bool) onChanged,
+  ) {
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: value ? AppColors.primaryColor.withOpacity(0.1) : Colors.grey.shade100,
+          color: value
+              ? AppColors.primaryColor.withOpacity(0.1)
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: value ? AppColors.primaryColor : Colors.grey.shade300,
@@ -259,7 +301,11 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: value ? AppColors.primaryColor : Colors.grey.shade500),
+            Icon(
+              icon,
+              size: 20,
+              color: value ? AppColors.primaryColor : Colors.grey.shade500,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
@@ -290,13 +336,34 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
   }
 
   void _saveRestaurant() {
+    // Check if logo is selected
+    if (_logoImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Text('Please add a restaurant logo before saving'),
+            ],
+          ),
+          backgroundColor: AppColors.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final branchCount = int.tryParse(_branchesCountController.text) ?? 1;
       final branchLocations = List.generate(
         branchCount,
         (_) => _branchLocationController.text.trim(),
       );
-      
+
       context.read<RestaurantCubit>().addRestaurantsWithBranches(
         name: _nameController.text.trim(),
         branchLocations: branchLocations,

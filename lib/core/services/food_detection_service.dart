@@ -53,7 +53,7 @@ class FoodDetectionService {
 
   String? _translateToEgyptian(String label) {
     String lowerLabel = label.toLowerCase();
-    
+
     for (var entry in _egyptianMapping.entries) {
       if (lowerLabel.contains(entry.key)) {
         return entry.value;
@@ -63,8 +63,12 @@ class FoodDetectionService {
   }
 
   Future<void> init() async {
-    _interpreter = await Interpreter.fromAsset('assets/tflite/food_model.tflite');
-    final String labelsData = await rootBundle.loadString('assets/tflite/labels.txt');
+    _interpreter = await Interpreter.fromAsset(
+      'assets/tflite/food_model.tflite',
+    );
+    final String labelsData = await rootBundle.loadString(
+      'assets/tflite/labels.txt',
+    );
     _labels = labelsData.split('\n').where((s) => s.trim().isNotEmpty).toList();
   }
 
@@ -80,20 +84,34 @@ class FoodDetectionService {
     }
   }
 
-  Future<CustomDetectionResult?> detectFoodFromImage(img.Image originalImage) async {
+  Future<CustomDetectionResult?> detectFoodFromImage(
+    img.Image originalImage,
+  ) async {
     try {
       if (_interpreter == null || _labels == null) {
         await init();
       }
 
-      img.Image resizedImage = img.copyResize(originalImage, width: 224, height: 224);
+      img.Image resizedImage = img.copyResize(
+        originalImage,
+        width: 224,
+        height: 224,
+      );
 
       var inputTensor = _interpreter!.getInputTensor(0);
-      bool isQuantized = inputTensor.type.toString().toLowerCase().contains('int8');
+      bool isQuantized = inputTensor.type.toString().toLowerCase().contains(
+        'int8',
+      );
 
-      var input;
+      List<List<List<List<num>>>> input;
       if (isQuantized) {
-        input = List.generate(1, (i) => List.generate(224, (j) => List.generate(224, (k) => List.filled(3, 0))));
+        input = List.generate(
+          1,
+          (i) => List.generate(
+            224,
+            (j) => List.generate(224, (k) => List.filled(3, 0)),
+          ),
+        );
         for (int y = 0; y < 224; y++) {
           for (int x = 0; x < 224; x++) {
             var pixel = resizedImage.getPixel(x, y);
@@ -103,7 +121,13 @@ class FoodDetectionService {
           }
         }
       } else {
-        input = List.generate(1, (i) => List.generate(224, (j) => List.generate(224, (k) => List.filled(3, 0.0))));
+        input = List.generate(
+          1,
+          (i) => List.generate(
+            224,
+            (j) => List.generate(224, (k) => List.filled(3, 0.0)),
+          ),
+        );
         for (int y = 0; y < 224; y++) {
           for (int x = 0; x < 224; x++) {
             var pixel = resizedImage.getPixel(x, y);
@@ -113,10 +137,13 @@ class FoodDetectionService {
           }
         }
       }
-      
-      var outputTensor = _interpreter! .getOutputTensor(0);
-      bool isOutputQuantized = outputTensor.type.toString().toLowerCase().contains('int8');
-      var output;
+
+      var outputTensor = _interpreter!.getOutputTensor(0);
+      bool isOutputQuantized = outputTensor.type
+          .toString()
+          .toLowerCase()
+          .contains('int8');
+      List<List<num>> output;
 
       if (isOutputQuantized) {
         output = List.generate(1, (i) => List.filled(_labels!.length, 0));
@@ -130,10 +157,12 @@ class FoodDetectionService {
       // which might be an irrelevant foreign name (like 'Spaghetti' instead of 'Macaroni')
       List<MapEntry<int, double>> indexedScores = [];
       for (int i = 0; i < _labels!.length; i++) {
-        double score = isOutputQuantized ? (output[0][i] / 255.0) : output[0][i];
+        double score = isOutputQuantized
+            ? (output[0][i] / 255.0)
+            : (output[0][i] as double);
         indexedScores.add(MapEntry(i, score));
       }
-      
+
       // Sort descending by score
       indexedScores.sort((a, b) => b.value.compareTo(a.value));
 
@@ -143,10 +172,11 @@ class FoodDetectionService {
         double score = indexedScores[i].value;
         String rawLabel = _labels![labelIndex];
 
-        if (rawLabel.toLowerCase().contains("__background__") || rawLabel.startsWith("/g/")) {
-           continue;
+        if (rawLabel.toLowerCase().contains("__background__") ||
+            rawLabel.startsWith("/g/")) {
+          continue;
         }
-        
+
         String? translated = _translateToEgyptian(rawLabel);
         if (translated != null) {
           // Found a valid Egyptian dish in the top 5!
@@ -159,5 +189,4 @@ class FoodDetectionService {
       throw Exception("Model error: $e");
     }
   }
-
 }

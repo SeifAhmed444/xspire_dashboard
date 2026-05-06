@@ -202,19 +202,16 @@ class DashboardViewBody extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      // Placeholder for symmetry (or can add 4th action)
+                      // Analytics Dashboard
                       Expanded(
                         child: _ActionCard(
                           icon: Icons.analytics_outlined,
                           label: AppLocalizations.of(
                             context,
                           ).analyticsStatsLabel,
-                          subtitle: AppLocalizations.of(context).comingSoon,
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.grey.shade600,
-                              Colors.grey.shade500,
-                            ],
+                          subtitle: 'View reviews & ratings',
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF9800), Color(0xFFFFA726)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

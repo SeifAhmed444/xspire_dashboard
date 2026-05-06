@@ -493,6 +493,26 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Check if logo is selected for new restaurants or if image is required for editing
+    if (_pickedImage == null && !_isEdit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Expanded(child: Text('Please add a restaurant logo before saving')),
+            ],
+          ),
+          backgroundColor: AppColors.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+    
     setState(() => _isSubmitting = true);
 
     final cubit = context.read<RestaurantCubit>();

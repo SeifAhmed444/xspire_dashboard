@@ -57,4 +57,16 @@ class ReviewModel {
     rating: rating,
     date: date,
   );
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'name': name,
+      'image': image,
+      'review': review,
+      'rating': rating,
+      'date': date?.toIso8601String(),
+    };
+  }
 }

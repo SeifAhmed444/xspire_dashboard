@@ -27,15 +27,16 @@ class _AnalyticsViewState extends State<AnalyticsView> {
   int totalProducts = 0;
   int totalReviews = 0;
   double averageRating = 0.0;
-  Map<int, int> ratingCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
-  List<ReviewEntity> latestReviews = [];
+  List<_ReviewWithContext> latestReviews = [];
   List<MapEntry<RestaurantEntity, List<AddProductInputEntity>>>
   restaurantProductStats = [];
-  List<MapEntry<RestaurantEntity, double>> restaurantAverageRatings = [];
-  // Keyword analytics
-  Map<String, int> keywordCounts = {};
-  Map<String, int> keywordRatingSum = {};
-  List<MapEntry<String, int>> topKeywords = [];
+  // Product performance
+  List<AddProductInputEntity> bestProducts = [];
+  List<AddProductInputEntity> worstProducts = [];
+  List<AddProductInputEntity> lowStockProducts = [];
+  List<AddProductInputEntity> unavailableProducts = [];
+  List<AddProductInputEntity> unreviewedProducts = [];
+  List<AddProductInputEntity> discountedProducts = [];
 
   @override
   void initState() {
@@ -110,98 +111,102 @@ class _AnalyticsViewState extends State<AnalyticsView> {
     totalProducts = 0;
     totalReviews = 0;
     double sum = 0;
-    ratingCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     latestReviews = [];
     restaurantProductStats = [];
-    restaurantAverageRatings = [];
 
     for (final r in _restaurants) {
       final products = _productsByRestaurant[r.docId] ?? const [];
       totalProducts += products.length;
       restaurantProductStats.add(MapEntry(r, products));
 
-      double restaurantRatingSum = 0;
-      int restaurantReviewCount = 0;
+      // Aggregate reviews from all products for this restaurant
+      for (final product in products) {
+        for (final rev in product.reviews) {
+          totalReviews++;
+          final rating = rev.rating ?? 0;
+          sum += rating;
+          latestReviews.add(
+            _ReviewWithContext(
+              review: rev,
+              productTitle: product.title,
+              restaurantName: r.displayName,
+            ),
+          );
+        }
+      }
 
+      // Also include any reviews from the restaurant entity itself (for backward compatibility)
       for (final rev in r.reviews) {
         totalReviews++;
         final rating = rev.rating ?? 0;
-        sum += (rating);
-        restaurantRatingSum += rating;
-        restaurantReviewCount++;
-        if (rating >= 1 && rating <= 5)
-          ratingCounts[rating] = ratingCounts[rating]! + 1;
-        latestReviews.add(rev);
+        sum += rating;
+        latestReviews.add(
+          _ReviewWithContext(
+            review: rev,
+            productTitle: 'Restaurant-level review',
+            restaurantName: r.displayName,
+          ),
+        );
       }
-
-      final restaurantAvg = restaurantReviewCount == 0
-          ? 0.0
-          : restaurantRatingSum / restaurantReviewCount;
-      restaurantAverageRatings.add(MapEntry(r, restaurantAvg));
     }
 
     if (totalReviews > 0) averageRating = (sum / totalReviews);
     latestReviews.sort(
       (a, b) =>
-          (b.date?.millisecondsSinceEpoch ?? 0) -
-          (a.date?.millisecondsSinceEpoch ?? 0),
+          (b.review.date?.millisecondsSinceEpoch ?? 0) -
+          (a.review.date?.millisecondsSinceEpoch ?? 0),
     );
     if (latestReviews.length > 20) latestReviews = latestReviews.sublist(0, 20);
 
-    // Build keyword counts (simple tokenizer + stopwords)
-    keywordCounts.clear();
-    keywordRatingSum.clear();
-    final stopwords = <String>{
-      'the',
-      'and',
-      'for',
-      'with',
-      'this',
-      'that',
-      'have',
-      'from',
-      'your',
-      'was',
-      'were',
-      'but',
-      'not',
-      'are',
-      'our',
-      'you',
-      'its',
-      'a',
-      'an',
-      'in',
-      'on',
-      'of',
-      'to',
-      'is',
-      'it',
-      'at',
-      'be',
-    };
-
-    for (final rev in latestReviews) {
-      final text = (rev.review ?? '').toLowerCase();
-      if (text.isEmpty) continue;
-      final tokens = text.split(RegExp(r"[^a-zA-Z\u0600-\u06FF0-9]+"));
-      final used = <String>{};
-      for (final t in tokens) {
-        final tok = t.trim();
-        if (tok.length < 3) continue;
-        if (stopwords.contains(tok)) continue;
-        // avoid double-counting same word in single review
-        if (used.contains(tok)) continue;
-        used.add(tok);
-        keywordCounts[tok] = (keywordCounts[tok] ?? 0) + 1;
-        keywordRatingSum[tok] =
-            (keywordRatingSum[tok] ?? 0) + (rev.rating ?? 0);
-      }
+    // Compute product performance using avgRating from products
+    final allProducts = <AddProductInputEntity>[];
+    for (final restaurant in _restaurants) {
+      final products = _productsByRestaurant[restaurant.docId] ?? [];
+      allProducts.addAll(products);
     }
 
-    topKeywords = keywordCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    if (topKeywords.length > 20) topKeywords = topKeywords.sublist(0, 20);
+    // Sort by average rating (best products)
+    bestProducts = allProducts.where((p) => p.avgRating > 0).toList()
+      ..sort((a, b) => b.avgRating.compareTo(a.avgRating));
+    if (bestProducts.length > 5) bestProducts = bestProducts.sublist(0, 5);
+
+    // Sort by average rating (worst products)
+    worstProducts = allProducts.where((p) => p.avgRating > 0).toList()
+      ..sort((a, b) => a.avgRating.compareTo(b.avgRating));
+    if (worstProducts.length > 5) worstProducts = worstProducts.sublist(0, 5);
+
+    // Sort by review count (most reviewed)
+
+    lowStockProducts = allProducts.where((p) => p.bagsLeft <= 3).toList()
+      ..sort((a, b) => a.bagsLeft.compareTo(b.bagsLeft));
+    if (lowStockProducts.length > 5) {
+      lowStockProducts = lowStockProducts.sublist(0, 5);
+    }
+
+    unavailableProducts = allProducts.where((p) => !p.isAvailable).toList()
+      ..sort((a, b) => a.title.compareTo(b.title));
+    if (unavailableProducts.length > 5) {
+      unavailableProducts = unavailableProducts.sublist(0, 5);
+    }
+
+    unreviewedProducts = allProducts.where((p) => p.reviews.isEmpty).toList()
+      ..sort((a, b) => a.title.compareTo(b.title));
+    if (unreviewedProducts.length > 5) {
+      unreviewedProducts = unreviewedProducts.sublist(0, 5);
+    }
+
+    discountedProducts =
+        allProducts
+            .where((p) => p.oldPrice != null && p.oldPrice! > p.price)
+            .toList()
+          ..sort((a, b) {
+            final aDiscount = ((a.oldPrice! - a.price) / a.oldPrice!) * 100;
+            final bDiscount = ((b.oldPrice! - b.price) / b.oldPrice!) * 100;
+            return bDiscount.compareTo(aDiscount);
+          });
+    if (discountedProducts.length > 5) {
+      discountedProducts = discountedProducts.sublist(0, 5);
+    }
   }
 
   @override
@@ -229,9 +234,11 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                   const SizedBox(height: 12),
                   _buildRestaurantStatsCard(),
                   const SizedBox(height: 12),
-                  _buildDistributionCard(),
+                  _buildProductPerformanceCard(),
                   const SizedBox(height: 12),
-                  _buildTopKeywordsCard(),
+                  _buildWorstProductsCard(),
+                  const SizedBox(height: 12),
+                  _buildInventoryAlertsCard(),
                   const SizedBox(height: 12),
                   const Text(
                     'Latest Reviews',
@@ -355,12 +362,23 @@ class _AnalyticsViewState extends State<AnalyticsView> {
             ...sortedRestaurants.map((entry) {
               final restaurant = entry.key;
               final products = entry.value;
-              final avgRating = restaurantAverageRatings
-                  .firstWhere(
-                    (e) => e.key.docId == restaurant.docId,
-                    orElse: () => MapEntry(restaurant, 0.0),
-                  )
-                  .value;
+              final availableProducts = products
+                  .where((p) => p.isAvailable)
+                  .length;
+              final unavailableProducts = products.length - availableProducts;
+              final lowStockProducts = products
+                  .where((p) => p.bagsLeft <= 3)
+                  .length;
+              final unreviewedProducts = products
+                  .where((p) => p.reviews.isEmpty)
+                  .length;
+              final discountedProducts = products
+                  .where((p) => p.oldPrice != null && p.oldPrice! > p.price)
+                  .length;
+              final restaurantReviewCount = products.fold<int>(
+                0,
+                (count, product) => count + product.reviews.length,
+              );
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -402,17 +420,31 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          '${restaurant.reviews.length} reviews',
+                          '$availableProducts available • $unavailableProducts hidden',
                           style: TextStyle(
                             color: Colors.grey.shade700,
                             fontSize: 12,
                           ),
                         ),
                         Text(
-                          avgRating.toStringAsFixed(1),
+                          '$restaurantReviewCount reviews • $lowStockProducts low stock',
                           style: TextStyle(
-                            color: Colors.amber.shade800,
-                            fontWeight: FontWeight.w700,
+                            color: Colors.deepOrange.shade700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '$unreviewedProducts no reviews',
+                          style: TextStyle(
+                            color: Colors.deepOrange.shade700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '$discountedProducts discounted',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -421,111 +453,6 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ),
               );
             }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDistributionCard() {
-    final maxCount = ratingCounts.values.fold<int>(0, (p, n) => n > p ? n : p);
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Ratings Distribution',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            ...[5, 4, 3, 2, 1].map((star) {
-              final count = ratingCounts[star] ?? 0;
-              final pct = maxCount == 0 ? 0.0 : (count / maxCount);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: Row(
-                  children: [
-                    SizedBox(width: 28, child: Text('$star★')),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          Container(
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          FractionallySizedBox(
-                            widthFactor: pct,
-                            child: Container(
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: Colors.blueAccent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(width: 40, child: Text('$count')),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopKeywordsCard() {
-    if (topKeywords.isEmpty) {
-      return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            'No keyword insights yet',
-            style: TextStyle(color: Colors.grey[700]),
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Top Mentioned Keywords',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: topKeywords.map((e) {
-                final kw = e.key;
-                final count = e.value;
-                final avg =
-                    (keywordRatingSum[kw] ?? 0) / (count == 0 ? 1 : count);
-                return Chip(
-                  label: Text('$kw · $count · ${avg.toStringAsFixed(1)}★'),
-                );
-              }).toList(),
-            ),
           ],
         ),
       ),
@@ -550,6 +477,33 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 Text('Total Reviews: $totalReviews'),
                 Text('Total Products: $totalProducts'),
                 Text('Avg Rating: ${averageRating.toStringAsFixed(2)}'),
+                const SizedBox(height: 12),
+                const Text(
+                  'Product Performance:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
+                Text(
+                  'Best Products: ${bestProducts.length}',
+                  style: const TextStyle(color: Colors.green),
+                ),
+                Text(
+                  'Worst Products: ${worstProducts.length}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+                if (bestProducts.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Top Product:',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+                  ),
+                  Text(
+                    '${bestProducts.first.title} (${bestProducts.first.avgRating.toStringAsFixed(2)}★)',
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 const Text(
                   'Restaurant Breakdown:',
@@ -576,6 +530,21 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                           Text(
                             '📦 Products: ${products.length}',
                             style: const TextStyle(fontSize: 12),
+                          ),
+                          ...products.map(
+                            (p) => Padding(
+                              padding: const EdgeInsets.only(
+                                left: 8.0,
+                                top: 4.0,
+                              ),
+                              child: Text(
+                                '  ↳ ${p.title} (${p.reviews.length} reviews)',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
                           ),
                           Text(
                             '⭐ Reviews: ${r.reviews.length}',
@@ -626,6 +595,340 @@ class _AnalyticsViewState extends State<AnalyticsView> {
     );
   }
 
+  Widget _buildProductPerformanceCard() {
+    if (bestProducts.isEmpty) {
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            'No rated products yet',
+            style: TextStyle(color: Colors.grey[700]),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.trending_up, color: Colors.green, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  '⭐ Your Best Products',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...bestProducts.map((product) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            product.restaurantName ?? 'Unknown',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${product.avgRating.toStringAsFixed(1)}★',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '${product.reviews.length} reviews',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorstProductsCard() {
+    if (worstProducts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.trending_down, color: Colors.red, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  '⚠️ Products Needing Attention',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...worstProducts.map((product) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            product.restaurantName ?? 'Unknown',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${product.avgRating.toStringAsFixed(1)}★',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.red,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '${product.reviews.length} reviews',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInventoryAlertsCard() {
+    if (lowStockProducts.isEmpty &&
+        unavailableProducts.isEmpty &&
+        unreviewedProducts.isEmpty &&
+        discountedProducts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.tune, color: Colors.deepPurple, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  'Manager Alerts',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (lowStockProducts.isNotEmpty) ...[
+              const Text(
+                'Low stock',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              ...lowStockProducts.map(
+                (product) => _buildAlertRow(
+                  color: Colors.orange,
+                  title: product.title,
+                  subtitle:
+                      '${product.restaurantName ?? 'Unknown'} • ${product.bagsLeft} left',
+                  trailing: product.bagsLeft <= 0 ? 'Out' : 'Low',
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (unavailableProducts.isNotEmpty) ...[
+              const Text(
+                'Unavailable products',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              ...unavailableProducts.map(
+                (product) => _buildAlertRow(
+                  color: Colors.red,
+                  title: product.title,
+                  subtitle: product.restaurantName ?? 'Unknown',
+                  trailing: 'Hidden',
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (unreviewedProducts.isNotEmpty) ...[
+              const Text(
+                'No reviews yet',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              ...unreviewedProducts.map(
+                (product) => _buildAlertRow(
+                  color: Colors.blueGrey,
+                  title: product.title,
+                  subtitle: product.restaurantName ?? 'Unknown',
+                  trailing: 'New',
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (discountedProducts.isNotEmpty) ...[
+              const Text(
+                'Discounted products',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              ...discountedProducts.map((product) {
+                final discount =
+                    ((product.oldPrice! - product.price) / product.oldPrice!) *
+                    100;
+                return _buildAlertRow(
+                  color: Colors.green,
+                  title: product.title,
+                  subtitle:
+                      '${product.restaurantName ?? 'Unknown'} • ${discount.toStringAsFixed(0)}% off',
+                  trailing: product.price.toStringAsFixed(2),
+                );
+              }),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlertRow({
+    required Color color,
+    required String title,
+    required String subtitle,
+    required String trailing,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            trailing,
+            style: TextStyle(fontWeight: FontWeight.w700, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLatestReviews() {
     if (latestReviews.isEmpty) {
       return const Center(child: Text('No reviews yet'));
@@ -636,7 +939,8 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       itemCount: latestReviews.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final r = latestReviews[index];
+        final item = latestReviews[index];
+        final r = item.review;
         return Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -671,6 +975,16 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${item.restaurantName} • ${item.productTitle}',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         r.review ?? '',
@@ -695,4 +1009,16 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       },
     );
   }
+}
+
+class _ReviewWithContext {
+  final ReviewEntity review;
+  final String restaurantName;
+  final String productTitle;
+
+  const _ReviewWithContext({
+    required this.review,
+    required this.restaurantName,
+    required this.productTitle,
+  });
 }
