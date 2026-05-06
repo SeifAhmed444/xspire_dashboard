@@ -5,7 +5,6 @@ import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/core/widgets/custom_button.dart';
-import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/manager/cubit/add_product_cubit.dart';
 import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/is_featured_check_box.dart';
@@ -31,7 +30,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
   List<DetectedItem> detectedItems = [];
   File? image;
   bool isAvailable = true;
-  
+
   // Selected restaurant
   RestaurantEntity? selectedRestaurant;
   List<RestaurantEntity> restaurants = [];
@@ -72,18 +71,16 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: const Center(child: CircularProgressIndicator()),
                     );
                   }
-                  
+
                   if (state is RestaurantLoaded) {
                     restaurants = state.restaurants;
                   } else if (state is RestaurantOperationSuccess) {
                     restaurants = state.restaurants;
                   }
-                  
+
                   return _buildRestaurantDropdown();
                 },
               ),
@@ -101,7 +98,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                     image = scannedImage;
 
                     // Parse detected food string (comma-separated)
-                    var items = detectedFood.split(', ').where((s) => s.isNotEmpty).toList();
+                    var items = detectedFood
+                        .split(', ')
+                        .where((s) => s.isNotEmpty)
+                        .toList();
                     if (items.isEmpty) {
                       items = ['Food Item'];
                     }
@@ -123,7 +123,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)],
+                      colors: [
+                        Colors.green.withOpacity(0.1),
+                        Colors.green.withOpacity(0.05),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.green.withOpacity(0.3)),
@@ -137,10 +140,11 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                           const SizedBox(width: 8),
                           Text(
                             AppLocalizations.of(context).verifyDetectedItems,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
                           ),
                         ],
                       ),
@@ -159,7 +163,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.05),
                                   blurRadius: 4,
-                                )
+                                ),
                               ],
                             ),
                             child: Column(
@@ -173,15 +177,22 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         controller: item.nameController,
                                         onChanged: (v) => item.name = v,
                                         decoration: InputDecoration(
-                                          labelText: '${AppLocalizations.of(context).bagItem} ${idx + 1}',
+                                          labelText:
+                                              '${AppLocalizations.of(context).bagItem} ${idx + 1}',
                                           labelStyle: const TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
                                         ),
                                         style: const TextStyle(
                                           fontSize: 15,
@@ -196,15 +207,23 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                           item.isDeleted = true;
                                         });
                                       },
-                                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                      tooltip: AppLocalizations.of(context).deleteItem,
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                      ),
+                                      tooltip: AppLocalizations.of(
+                                        context,
+                                      ).deleteItem,
                                     ),
                                   ],
                                 ),
                                 if (item.isDeleted) ...[
                                   const SizedBox(height: 4),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.red.shade100,
                                       borderRadius: BorderRadius.circular(4),
@@ -212,11 +231,20 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.warning, color: Colors.red, size: 16),
+                                        const Icon(
+                                          Icons.warning,
+                                          color: Colors.red,
+                                          size: 16,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          AppLocalizations.of(context).willBeDeleted,
-                                          style: TextStyle(color: Colors.red, fontSize: 12),
+                                          AppLocalizations.of(
+                                            context,
+                                          ).willBeDeleted,
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                         const SizedBox(width: 4),
                                         GestureDetector(
@@ -227,11 +255,12 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                           },
                                           child: Text(
                                             AppLocalizations.of(context).undo,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.red,
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
-                                              decoration: TextDecoration.underline,
+                                              decoration:
+                                                  TextDecoration.underline,
                                             ),
                                           ),
                                         ),
@@ -249,15 +278,23 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         controller: item.oldPriceController,
                                         keyboardType: TextInputType.number,
                                         decoration: InputDecoration(
-                                          labelText: AppLocalizations.of(context).oldPriceEgp,
+                                          labelText: AppLocalizations.of(
+                                            context,
+                                          ).oldPriceEgp,
                                           labelStyle: const TextStyle(
                                             color: Colors.orange,
                                             fontWeight: FontWeight.bold,
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
                                           hintText: 'Enter original price',
                                         ),
                                         style: const TextStyle(
@@ -268,7 +305,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                     ),
                                     const SizedBox(width: 12),
                                     // Arrow
-                                    const Icon(Icons.arrow_forward, color: Colors.grey),
+                                    const Icon(
+                                      Icons.arrow_forward,
+                                      color: Colors.grey,
+                                    ),
                                     const SizedBox(width: 12),
                                     // New Price (auto-calculated, read-only)
                                     Expanded(
@@ -276,15 +316,23 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         controller: item.priceController,
                                         readOnly: true,
                                         decoration: InputDecoration(
-                                          labelText: AppLocalizations.of(context).newPriceEgp,
+                                          labelText: AppLocalizations.of(
+                                            context,
+                                          ).newPriceEgp,
                                           labelStyle: const TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
                                           filled: true,
                                           fillColor: Colors.green.shade50,
                                           suffixText: '(-60%)',
@@ -327,10 +375,13 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                               setState(() {
                                                 if (item.count > 0) {
                                                   item.count--;
-                                                  }
+                                                }
                                               });
                                             },
-                                            icon: const Icon(Icons.remove, size: 18),
+                                            icon: const Icon(
+                                              Icons.remove,
+                                              size: 18,
+                                            ),
                                             color: Colors.redAccent,
                                           ),
                                           Text(
@@ -346,7 +397,10 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                                 item.count++;
                                               });
                                             },
-                                            icon: const Icon(Icons.add, size: 18),
+                                            icon: const Icon(
+                                              Icons.add,
+                                              size: 18,
+                                            ),
                                             color: Colors.green,
                                           ),
                                         ],
@@ -396,45 +450,54 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                   final activeItems = detectedItems
                       .where((i) => !i.isDeleted && i.count > 0)
                       .toList();
-                  
+
                   if (activeItems.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(AppLocalizations.of(context).noItemsToSave),
+                        content: Text(
+                          AppLocalizations.of(context).noItemsToSave,
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
                     return;
                   }
-                  
+
                   // Auto-generate title from item names
                   final List<String> itemNames = activeItems
                       .map((i) => i.nameController.text.trim())
                       .toList();
-                  final autoTitle = itemNames.length == 1 
-                      ? itemNames.first 
+                  final autoTitle = itemNames.length == 1
+                      ? itemNames.first
                       : '${itemNames.first} +${itemNames.length - 1}';
-                  
+
                   // Calculate total price (sum of all new prices)
                   final totalPrice = activeItems.fold<double>(0, (sum, i) {
-                    final newPrice = double.tryParse(i.priceController.text) ?? 0.0;
+                    final newPrice =
+                        double.tryParse(i.priceController.text) ?? 0.0;
                     return sum + (newPrice * i.count);
                   });
-                  
+
                   // Total quantity
-                  final totalQuantity = activeItems.fold<int>(0, (sum, i) => sum + i.count);
-                  
+                  final totalQuantity = activeItems.fold<int>(
+                    0,
+                    (sum, i) => sum + i.count,
+                  );
+
                   // Calculate total old price
                   final totalOldPrice = activeItems.fold<double>(0, (sum, i) {
-                    final old = double.tryParse(i.oldPriceController.text) ?? 0.0;
+                    final old =
+                        double.tryParse(i.oldPriceController.text) ?? 0.0;
                     return sum + (old * i.count);
                   });
-                  
+
                   // Filter out deleted items and format with prices
                   final List<String> finalItems = activeItems.map((i) {
                     final name = i.nameController.text.trim();
-                    final oldPrice = double.tryParse(i.oldPriceController.text) ?? 0.0;
-                    final newPrice = double.tryParse(i.priceController.text) ?? 0.0;
+                    final oldPrice =
+                        double.tryParse(i.oldPriceController.text) ?? 0.0;
+                    final newPrice =
+                        double.tryParse(i.priceController.text) ?? 0.0;
                     if (oldPrice > 0 && newPrice > 0) {
                       return "${i.count}x $name (EGP ${newPrice.toStringAsFixed(0)}~)";
                     }
@@ -486,7 +549,11 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
         children: [
           Row(
             children: [
-              Icon(Icons.restaurant, color: AppColors.primaryColor, size: 20),
+              const Icon(
+                Icons.restaurant,
+                color: AppColors.primaryColor,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context).selectRestaurant,
@@ -500,88 +567,106 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
           ),
           const SizedBox(height: 12),
           restaurants.isEmpty
-            ? Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.grey.shade500),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context).noRestaurantsYet,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
+              ? Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.grey.shade500),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).noRestaurantsYet,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              )
-            : DropdownButtonFormField<RestaurantEntity>(
-                value: selectedRestaurant,
-                hint: Text(AppLocalizations.of(context).chooseRestaurant, style: TextStyle(color: Colors.grey.shade500)),
-                isExpanded: true,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    ],
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                items: restaurants.map((restaurant) {
-                  return DropdownMenuItem<RestaurantEntity>(
-                    value: restaurant,
-                    child: Row(
-                      children: [
-                        Icon(Icons.store, size: 18, color: AppColors.primaryColor),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${restaurant.displayName} • ${restaurant.branchLocation}',
-                            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-                            overflow: TextOverflow.ellipsis,
+                )
+              : DropdownButtonFormField<RestaurantEntity>(
+                  initialValue: selectedRestaurant,
+                  hint: Text(
+                    AppLocalizations.of(context).chooseRestaurant,
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  items: restaurants.map((restaurant) {
+                    return DropdownMenuItem<RestaurantEntity>(
+                      value: restaurant,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.store,
+                            size: 18,
+                            color: AppColors.primaryColor,
                           ),
-                        ),
-                        if (restaurant.isAvailable)
-                          Container(
-                            margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${restaurant.displayName} • ${restaurant.branchLocation}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            child: const Text(
-                              '✓',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w600,
+                          ),
+                          if (restaurant.isAvailable)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '✓',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedRestaurant = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return AppLocalizations.of(context).pleaseSelectRestaurant;
-                  }
-                  return null;
-                },
-              ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRestaurant = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return AppLocalizations.of(
+                        context,
+                      ).pleaseSelectRestaurant;
+                    }
+                    return null;
+                  },
+                ),
         ],
       ),
     );
@@ -598,12 +683,20 @@ class DetectedItem {
   late TextEditingController priceController;
   bool isDeleted;
 
-  DetectedItem(this.name, this.count, {this.oldPrice = 0.0, this.isDeleted = false}) 
-      : price = oldPrice * 0.4 {
+  DetectedItem(
+    this.name,
+    this.count, {
+    this.oldPrice = 0.0,
+    this.isDeleted = false,
+  }) : price = oldPrice * 0.4 {
     nameController = TextEditingController(text: name);
-    oldPriceController = TextEditingController(text: oldPrice > 0 ? oldPrice.toStringAsFixed(2) : '');
-    priceController = TextEditingController(text: price > 0 ? price.toStringAsFixed(2) : '');
-    
+    oldPriceController = TextEditingController(
+      text: oldPrice > 0 ? oldPrice.toStringAsFixed(2) : '',
+    );
+    priceController = TextEditingController(
+      text: price > 0 ? price.toStringAsFixed(2) : '',
+    );
+
     // Auto-calculate new price when old price changes
     oldPriceController.addListener(() {
       final old = double.tryParse(oldPriceController.text) ?? 0.0;

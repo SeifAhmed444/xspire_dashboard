@@ -9,6 +9,7 @@ import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/
 import 'package:xspire_dashboard/features/auth/presentation/manager/Login_cubit/login_state.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/manage_data_view.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/add_restaurant_simple.dart';
+import 'package:xspire_dashboard/features/analytics/view/analytics_view.dart';
 
 class DashboardViewBody extends StatelessWidget {
   const DashboardViewBody({super.key});
@@ -19,192 +20,226 @@ class DashboardViewBody extends StatelessWidget {
       listener: (context, state) {
         if (state is LogoutSuccessState) {
           Navigator.pushNamedAndRemoveUntil(
-              context, 'LoginView', (route) => false);
+            context,
+            'LoginView',
+            (route) => false,
+          );
         }
       },
       child: Scaffold(
-      backgroundColor: const Color(0xFFF5F7F5),
-      body: CustomScrollView(
-        slivers: [
-          // ── Header ───────────────────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 190,
-            pinned: true,
-            backgroundColor: AppColors.primaryColor,
-            actions: const [
-              LanguageToggleButton(),
-              SizedBox(width: 8),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                    gradient: AppColors.primaryGradient),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: -50, right: -50,
-                      child: Container(
-                        width: 200, height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -30, left: -40,
-                      child: Container(
-                        width: 150, height: 150,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 70, 24, 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 48, height: 48,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.18),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: const Icon(
-                                    Icons.restaurant_rounded,
-                                    color: Colors.white, size: 26),
-                              ),
-                              const SizedBox(width: 14),
-                              Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Text(AppLocalizations.of(context).appTitle,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700)),
-                                  const SizedBox(height: 2),
-                                  Text(AppLocalizations.of(context).foodOutletManagement,
-                                      style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 13)),
-                                ],
-                              ),
-                            ],
+        backgroundColor: const Color(0xFFF5F7F5),
+        body: CustomScrollView(
+          slivers: [
+            // ── Header ───────────────────────────────────────────────────────
+            SliverAppBar(
+              expandedHeight: 190,
+              pinned: true,
+              backgroundColor: AppColors.primaryColor,
+              actions: const [LanguageToggleButton(), SizedBox(width: 8)],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: -50,
+                        right: -50,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.06),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        bottom: -30,
+                        left: -40,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.06),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 70, 24, 24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.18),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    Icons.restaurant_rounded,
+                                    color: Colors.white,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context).appTitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).foodOutletManagement,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // ── Body ─────────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.all(20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 8),
-                Text(AppLocalizations.of(context).quickActions,
+            // ── Body ─────────────────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.all(20),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context).quickActions,
                     style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A2E))),
-                const SizedBox(height: 16),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-                // ── Three action cards (2x2 grid) ──────────────────────
-                Row(
-                  children: [
-                    // Add Bag Item
-                    Expanded(
-                      child: _ActionCard(
-                        icon: Icons.shopping_bag_outlined,
-                        label: AppLocalizations.of(context).addBagItemLabel,
-                        subtitle: AppLocalizations.of(context).scanAddBags,
-                        gradient: AppColors.primaryGradient,
-                        onTap: () => Navigator.pushNamed(
-                            context, AddProductView.routeName),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    // Add Restaurant
-                    Expanded(
-                      child: _ActionCard(
-                        icon: Icons.add_business_outlined,
-                        label: AppLocalizations.of(context).addRestaurantLabel,
-                        subtitle: AppLocalizations.of(context).createNewRestaurant,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  // ── Three action cards (2x2 grid) ──────────────────────
+                  Row(
+                    children: [
+                      // Add Bag Item
+                      Expanded(
+                        child: _ActionCard(
+                          icon: Icons.shopping_bag_outlined,
+                          label: AppLocalizations.of(context).addBagItemLabel,
+                          subtitle: AppLocalizations.of(context).scanAddBags,
+                          gradient: AppColors.primaryGradient,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AddProductView.routeName,
+                          ),
                         ),
-                        onTap: () => Navigator.pushNamed(
-                            context, AddRestaurantSimple.routeName),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    // Manage Restaurants
-                    Expanded(
-                      child: _ActionCard(
-                        icon: Icons.manage_search_rounded,
-                        label: AppLocalizations.of(context).manageRestaurantsLabel,
-                        subtitle: AppLocalizations.of(context).viewEditDelete,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                      const SizedBox(width: 14),
+                      // Add Restaurant
+                      Expanded(
+                        child: _ActionCard(
+                          icon: Icons.add_business_outlined,
+                          label: AppLocalizations.of(
+                            context,
+                          ).addRestaurantLabel,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          ).createNewRestaurant,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AddRestaurantSimple.routeName,
+                          ),
                         ),
-                        onTap: () => Navigator.pushNamed(
-                            context, ManageDataView.routeName),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    // Placeholder for symmetry (or can add 4th action)
-                    Expanded(
-                      child: _ActionCard(
-                        icon: Icons.analytics_outlined,
-                        label: AppLocalizations.of(context).analyticsStatsLabel,
-                        subtitle: AppLocalizations.of(context).comingSoon,
-                        gradient: LinearGradient(
-                          colors: [Colors.grey.shade600, Colors.grey.shade500],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      // Manage Restaurants
+                      Expanded(
+                        child: _ActionCard(
+                          icon: Icons.manage_search_rounded,
+                          label: AppLocalizations.of(
+                            context,
+                          ).manageRestaurantsLabel,
+                          subtitle: AppLocalizations.of(context).viewEditDelete,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            ManageDataView.routeName,
+                          ),
                         ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context).comingSoon)),
-                          );
-                        },
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                      const SizedBox(width: 14),
+                      // Placeholder for symmetry (or can add 4th action)
+                      Expanded(
+                        child: _ActionCard(
+                          icon: Icons.analytics_outlined,
+                          label: AppLocalizations.of(
+                            context,
+                          ).analyticsStatsLabel,
+                          subtitle: AppLocalizations.of(context).comingSoon,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.grey.shade600,
+                              Colors.grey.shade500,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AnalyticsView.routeName,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
 
-                // ── Logout ──────────────────────────────────────────────
-                SpecialLogoutButton(
-                  onPressed: () {
-                    context.read<LoginCubit>().logout();
-                  },
-                ),
-                const SizedBox(height: 20),
-              ]),
+                  // ── Logout ──────────────────────────────────────────────
+                  SpecialLogoutButton(
+                    onPressed: () {
+                      context.read<LoginCubit>().logout();
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ]),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -246,9 +281,11 @@ class _ActionCard extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: -18, bottom: -18,
+              right: -18,
+              bottom: -18,
               child: Container(
-                width: 90, height: 90,
+                width: 90,
+                height: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.1),
@@ -272,17 +309,23 @@ class _ActionCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              height: 1.2)),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
                       const SizedBox(height: 3),
-                      Text(subtitle,
-                          style: TextStyle(
-                              color: Colors.white.withOpacity(0.75),
-                              fontSize: 11)),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ],

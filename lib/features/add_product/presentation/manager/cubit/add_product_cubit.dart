@@ -12,10 +12,11 @@ part 'add_product_state.dart';
 
 class AddProductCubit extends Cubit<AddProductState> {
   AddProductCubit(this.imageRepo, this.productsRepo)
-      : super(AddProductInitial());
+    : super(AddProductInitial());
 
   final ImageRepo imageRepo;
   final ProductsRepo productsRepo;
+  // ignore: unused_field
   final _businessHours = const BusinessHoursUseCase();
 
   // ── Add ───────────────────────────────────────────────────────────────────
@@ -37,13 +38,12 @@ class AddProductCubit extends Cubit<AddProductState> {
           entity.imageUrl = url;
 
           final result = await productsRepo.addProduct(entity);
-          result.fold(
-            (failure) => emit(AddProductFailure(failure.message)),
-            (_) async {
-              await _cacheLocally(entity);
-              emit(AddProductSuccess());
-            },
-          );
+          result.fold((failure) => emit(AddProductFailure(failure.message)), (
+            _,
+          ) async {
+            await _cacheLocally(entity);
+            emit(AddProductSuccess());
+          });
         },
       );
     } catch (e) {
@@ -52,28 +52,24 @@ class AddProductCubit extends Cubit<AddProductState> {
   }
 
   // ── Update ────────────────────────────────────────────────────────────────
-  Future<void> updateProduct(
-      String docId, AddProductInputEntity entity) async {
+  Future<void> updateProduct(String docId, AddProductInputEntity entity) async {
     emit(AddProductLoading());
     try {
       if (entity.image != null) {
         final imageResult = await imageRepo.uploadImage(entity.image!);
 
         bool imageFailed = false;
-        imageResult.fold(
-          (failure) {
-            emit(AddProductFailure(failure.message));
-            imageFailed = true;
-          },
-          (url) => entity.imageUrl = url,
-        );
+        imageResult.fold((failure) {
+          emit(AddProductFailure(failure.message));
+          imageFailed = true;
+        }, (url) => entity.imageUrl = url);
         if (imageFailed) return;
       }
 
       final result = await productsRepo.updateProduct(docId, entity);
       result.fold(
         (failure) => emit(AddProductFailure(failure.message)),
-        (_)       => emit(UpdateProductSuccess()),
+        (_) => emit(UpdateProductSuccess()),
       );
     } catch (e) {
       emit(AddProductFailure("Unexpected error while updating product"));
@@ -102,7 +98,7 @@ class AddProductCubit extends Cubit<AddProductState> {
     final result = await productsRepo.deleteProduct(docId);
     result.fold(
       (failure) => emit(AddProductFailure(failure.message)),
-      (_)       => emit(DeleteProductSuccess()),
+      (_) => emit(DeleteProductSuccess()),
     );
   }
 
@@ -110,17 +106,17 @@ class AddProductCubit extends Cubit<AddProductState> {
   Future<void> _cacheLocally(AddProductInputEntity entity) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw   = prefs.getString('cached_restaurants') ?? '[]';
-      final list  = jsonDecode(raw) as List;
+      final raw = prefs.getString('cached_restaurants') ?? '[]';
+      final list = jsonDecode(raw) as List;
 
       list.add({
-        'id'           : DateTime.now().millisecondsSinceEpoch.toString(),
-        'isAvailable'  : entity.isAvailable,
-        'imageUrl'     : entity.imageUrl,
-        'userEmail'    : entity.userEmail,
-        'title'        : entity.title,
-        'price'        : entity.price,
-        'bagsLeft'     : entity.bagsLeft,
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'isAvailable': entity.isAvailable,
+        'imageUrl': entity.imageUrl,
+        'userEmail': entity.userEmail,
+        'title': entity.title,
+        'price': entity.price,
+        'bagsLeft': entity.bagsLeft,
         'detectedItems': entity.detectedItems ?? [],
       });
 
