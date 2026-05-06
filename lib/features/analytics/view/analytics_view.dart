@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:xspire_dashboard/core/services/get_it_services.dart' show getIt;
+import 'package:xspire_dashboard/core/repos/product_repo/products_repo.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/restaurant_usecases.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 import 'package:xspire_dashboard/core/services/user_session.dart';
+import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 
 class AnalyticsView extends StatefulWidget {
   static const routeName = '/analytics';
@@ -14,15 +16,21 @@ class AnalyticsView extends StatefulWidget {
 
 class _AnalyticsViewState extends State<AnalyticsView> {
   final FetchRestaurantsUseCase _fetch = getIt<FetchRestaurantsUseCase>();
+  final ProductsRepo _productsRepo = getIt<ProductsRepo>();
   bool _loading = true;
   String? _error;
   List<RestaurantEntity> _restaurants = [];
+  Map<String, List<AddProductInputEntity>> _productsByRestaurant = {};
 
   // Aggregates
+  int totalProducts = 0;
   int totalReviews = 0;
   double averageRating = 0.0;
   Map<int, int> ratingCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
   List<ReviewEntity> latestReviews = [];
+  List<MapEntry<RestaurantEntity, List<AddProductInputEntity>>>
+  restaurantProductStats = [];
+  List<MapEntry<RestaurantEntity, double>> restaurantAverageRatings = [];
   // Keyword analytics
   Map<String, int> keywordCounts = {};
   Map<String, int> keywordRatingSum = {};
@@ -50,9 +58,11 @@ class _AnalyticsViewState extends State<AnalyticsView> {
         },
         (list) {
           _restaurants = list;
-          _computeAggregates();
-          setState(() {
-            _loading = false;
+          _loadProductStats(list).then((_) {
+            _computeAggregates();
+            setState(() {
+              _loading = false;
+            });
           });
         },
       );
@@ -64,21 +74,69 @@ class _AnalyticsViewState extends State<AnalyticsView> {
     }
   }
 
+  Future<void> _loadProductStats(List<RestaurantEntity> restaurants) async {
+    final entries = await Future.wait(
+      restaurants.map((restaurant) async {
+        if (restaurant.docId == null) {
+          return MapEntry<RestaurantEntity, List<AddProductInputEntity>>(
+            restaurant,
+            const [],
+          );
+        }
+        final result = await _productsRepo.getProductsByRestaurant(
+          restaurantId: restaurant.docId!,
+        );
+        return result.fold(
+          (_) => MapEntry<RestaurantEntity, List<AddProductInputEntity>>(
+            restaurant,
+            const [],
+          ),
+          (products) => MapEntry<RestaurantEntity, List<AddProductInputEntity>>(
+            restaurant,
+            products,
+          ),
+        );
+      }),
+    );
+
+    _productsByRestaurant = {
+      for (final entry in entries)
+        if (entry.key.docId != null) entry.key.docId!: entry.value,
+    };
+  }
+
   void _computeAggregates() {
+    totalProducts = 0;
     totalReviews = 0;
     double sum = 0;
     ratingCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     latestReviews = [];
+    restaurantProductStats = [];
+    restaurantAverageRatings = [];
 
     for (final r in _restaurants) {
+      final products = _productsByRestaurant[r.docId] ?? const [];
+      totalProducts += products.length;
+      restaurantProductStats.add(MapEntry(r, products));
+
+      double restaurantRatingSum = 0;
+      int restaurantReviewCount = 0;
+
       for (final rev in r.reviews) {
         totalReviews++;
         final rating = rev.rating ?? 0;
         sum += (rating);
+        restaurantRatingSum += rating;
+        restaurantReviewCount++;
         if (rating >= 1 && rating <= 5)
           ratingCounts[rating] = ratingCounts[rating]! + 1;
         latestReviews.add(rev);
       }
+
+      final restaurantAvg = restaurantReviewCount == 0
+          ? 0.0
+          : restaurantRatingSum / restaurantReviewCount;
+      restaurantAverageRatings.add(MapEntry(r, restaurantAvg));
     }
 
     if (totalReviews > 0) averageRating = (sum / totalReviews);
@@ -164,10 +222,11 @@ class _AnalyticsViewState extends State<AnalyticsView> {
           ? Center(child: Text(_error!))
           : Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: ListView(
                 children: [
                   _buildSummaryCard(),
+                  const SizedBox(height: 12),
+                  _buildRestaurantStatsCard(),
                   const SizedBox(height: 12),
                   _buildDistributionCard(),
                   const SizedBox(height: 12),
@@ -178,7 +237,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
-                  Expanded(child: _buildLatestReviews()),
+                  _buildLatestReviews(),
                 ],
               ),
             ),
@@ -234,6 +293,24 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
+                    'Total Products',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  Text(
+                    '$totalProducts',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
                     'Average Rating',
                     style: TextStyle(color: Colors.grey),
                   ),
@@ -247,6 +324,102 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestaurantStatsCard() {
+    if (_restaurants.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final sortedRestaurants = [...restaurantProductStats]
+      ..sort((a, b) => b.value.length.compareTo(a.value.length));
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Restaurant Breakdown',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            ...sortedRestaurants.map((entry) {
+              final restaurant = entry.key;
+              final products = entry.value;
+              final avgRating = restaurantAverageRatings
+                  .firstWhere(
+                    (e) => e.key.docId == restaurant.docId,
+                    orElse: () => MapEntry(restaurant, 0.0),
+                  )
+                  .value;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            restaurant.displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            restaurant.branchLocation,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${products.length} products',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          '${restaurant.reviews.length} reviews',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          avgRating.toStringAsFixed(1),
+                          style: TextStyle(
+                            color: Colors.amber.shade800,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -411,6 +584,8 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       return const Center(child: Text('No reviews yet'));
     }
     return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: latestReviews.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {

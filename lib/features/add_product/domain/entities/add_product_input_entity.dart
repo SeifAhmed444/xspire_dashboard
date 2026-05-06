@@ -14,9 +14,11 @@ class AddProductInputEntity {
   String? restaurantId;
   String? restaurantName;
   final String? pickupTime;
+  final String? productId;
 
   AddProductInputEntity({
     this.docId,
+    this.productId,
     required this.isAvailable,
     required this.title,
     required this.price,

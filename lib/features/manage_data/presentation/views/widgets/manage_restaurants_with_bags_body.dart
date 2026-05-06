@@ -13,10 +13,12 @@ class ManageRestaurantsWithBagsBody extends StatefulWidget {
   const ManageRestaurantsWithBagsBody({super.key});
 
   @override
-  State<ManageRestaurantsWithBagsBody> createState() => _ManageRestaurantsWithBagsBodyState();
+  State<ManageRestaurantsWithBagsBody> createState() =>
+      _ManageRestaurantsWithBagsBodyState();
 }
 
-class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBagsBody> {
+class _ManageRestaurantsWithBagsBodyState
+    extends State<ManageRestaurantsWithBagsBody> {
   final ProductsRepo _productsRepo = getIt<ProductsRepo>();
   Map<String, List<AddProductInputEntity>> _restaurantBags = {};
   bool _isLoadingBags = false;
@@ -29,13 +31,15 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
     // Don't load bags here - wait for restaurants to load in build
   }
 
-  Future<void> _loadBagsForRestaurants(List<RestaurantEntity> restaurants) async {
+  Future<void> _loadBagsForRestaurants(
+    List<RestaurantEntity> restaurants,
+  ) async {
     if (_bagsLoaded) return; // Already loaded
-    
+
     setState(() => _isLoadingBags = true);
-    
+
     final bagsMap = <String, List<AddProductInputEntity>>{};
-    
+
     for (final restaurant in restaurants) {
       if (restaurant.docId != null) {
         final result = await _productsRepo.getProductsByRestaurant(
@@ -47,7 +51,7 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
         );
       }
     }
-    
+
     if (mounted) {
       setState(() {
         _restaurantBags = bagsMap;
@@ -59,7 +63,9 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
 
   Future<void> _refresh(List<RestaurantEntity> restaurants) async {
     setState(() => _bagsLoaded = false); // Reset to reload bags
-    context.read<RestaurantCubit>().fetchRestaurants(UserSession.instance.currentEmail);
+    context.read<RestaurantCubit>().fetchRestaurants(
+      UserSession.instance.currentEmail,
+    );
     await _loadBagsForRestaurants(restaurants);
   }
 
@@ -68,31 +74,47 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
     return BlocConsumer<RestaurantCubit, RestaurantState>(
       listener: (context, state) {
         if (state is RestaurantOperationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
-              Text(state.message),
-            ]),
-            backgroundColor: AppColors.successColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(state.message),
+                ],
+              ),
+              backgroundColor: AppColors.successColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
           // Reload bags after successful operation
           setState(() => _bagsLoaded = false);
         }
         if (state is RestaurantError && state.message.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.message),
-            backgroundColor: AppColors.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.errorColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
         }
       },
       builder: (context, state) {
         if (state is RestaurantLoading) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryColor),
+          );
         }
 
         if (state is RestaurantEmpty) {
@@ -114,7 +136,9 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
           );
         }
 
-        final busyId = state is RestaurantOperationLoading ? state.operationId : null;
+        final busyId = state is RestaurantOperationLoading
+            ? state.operationId
+            : null;
 
         // Load bags when restaurants are first loaded
         if (restaurants.isNotEmpty && !_bagsLoaded && !_isLoadingBags) {
@@ -132,7 +156,7 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
             itemBuilder: (_, index) {
               final restaurant = restaurants[index];
               final bags = _restaurantBags[restaurant.docId] ?? [];
-              
+
               return _RestaurantWithBagsCard(
                 restaurant: restaurant,
                 bags: bags,
@@ -140,6 +164,7 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
                 isLoadingBags: _isLoadingBags,
                 onEdit: () => _showEditSheet(context, restaurant),
                 onDelete: () => _confirmDelete(context, restaurant),
+                onDeleteProduct: _deleteProduct,
               );
             },
           ),
@@ -154,10 +179,8 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: cubit,
-        child: const RestaurantFormSheet(),
-      ),
+      builder: (_) =>
+          BlocProvider.value(value: cubit, child: const RestaurantFormSheet()),
     );
   }
 
@@ -180,22 +203,36 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.errorColor, size: 24),
-          SizedBox(width: 10),
-          Text('Delete Restaurant'),
-        ]),
-        content: Text('Delete "${entity.name}"? This cannot be undone.', style: const TextStyle(fontSize: 14)),
+        title: const Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.errorColor,
+              size: 24,
+            ),
+            SizedBox(width: 10),
+            Text('Delete Restaurant'),
+          ],
+        ),
+        content: Text(
+          'Delete "${entity.name}"? This cannot be undone.',
+          style: const TextStyle(fontSize: 14),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.primaryColor)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.primaryColor),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorColor,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {
               Navigator.pop(context);
@@ -207,6 +244,69 @@ class _ManageRestaurantsWithBagsBodyState extends State<ManageRestaurantsWithBag
       ),
     );
   }
+
+  Future<void> _deleteProduct(
+    BuildContext context,
+    String? restaurantId,
+    String? productId,
+  ) async {
+    if (productId == null) return;
+    if (restaurantId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete product'),
+        content: const Text('Delete this product? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final previous = Map<String, List<AddProductInputEntity>>.from(
+      _restaurantBags,
+    );
+
+    setState(() {
+      final list = _restaurantBags[restaurantId] ?? [];
+      _restaurantBags[restaurantId] = list
+          .where((b) => b.productId != productId)
+          .toList();
+    });
+
+    final result = await _productsRepo.deleteProduct(productId);
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        setState(() => _restaurantBags = previous);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      },
+      (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Product deleted'),
+            backgroundColor: AppColors.successColor,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _RestaurantWithBagsCard extends StatelessWidget {
@@ -216,6 +316,12 @@ class _RestaurantWithBagsCard extends StatelessWidget {
   final bool isLoadingBags;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final Future<void> Function(
+    BuildContext context,
+    String? restaurantId,
+    String? productId,
+  )
+  onDeleteProduct;
 
   const _RestaurantWithBagsCard({
     required this.restaurant,
@@ -224,6 +330,7 @@ class _RestaurantWithBagsCard extends StatelessWidget {
     this.isLoadingBags = false,
     required this.onEdit,
     required this.onDelete,
+    required this.onDeleteProduct,
   });
 
   @override
@@ -242,7 +349,7 @@ class _RestaurantWithBagsCard extends StatelessWidget {
             onEdit: onEdit,
             onDelete: onDelete,
           ),
-          
+
           // ── Available Bags Section ─────────────────────────────────
           if (isLoadingBags) ...[
             // Loading indicator
@@ -252,7 +359,7 @@ class _RestaurantWithBagsCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
@@ -297,10 +404,16 @@ class _RestaurantWithBagsCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // ── Vertical List of Bag Cards ───────────────────────────
-            ...bags.map((bag) => _BagCard(bag: bag)),
-            
+            ...bags.map(
+              (bag) => _BagCard(
+                bag: bag,
+                onDelete: () =>
+                    onDeleteProduct(context, restaurant.docId, bag.productId),
+              ),
+            ),
+
             const SizedBox(height: 12),
           ] else ...[
             Padding(
@@ -313,7 +426,10 @@ class _RestaurantWithBagsCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.inventory_2_outlined, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'No bags available yet',
@@ -376,7 +492,10 @@ class _RestaurantHeader extends StatelessWidget {
               children: [
                 // Available Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: restaurant.isAvailable ? Colors.green : Colors.grey,
                     borderRadius: BorderRadius.circular(20),
@@ -384,7 +503,7 @@ class _RestaurantHeader extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.check_circle,
                         color: Colors.white,
                         size: 14,
@@ -404,16 +523,23 @@ class _RestaurantHeader extends StatelessWidget {
                 const SizedBox(width: 8),
                 // Now Badge (Open/Closed)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: restaurant.isOpend ? Colors.orange : Colors.grey.shade700,
+                    color: restaurant.isOpend
+                        ? Colors.orange
+                        : Colors.grey.shade700,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        restaurant.isOpend ? Icons.access_time_filled : Icons.access_time,
+                        restaurant.isOpend
+                            ? Icons.access_time_filled
+                            : Icons.access_time,
                         color: Colors.white,
                         size: 14,
                       ),
@@ -432,7 +558,7 @@ class _RestaurantHeader extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // ── Logo + Name Row ───────────────────────────────────────
             Row(
               children: [
@@ -479,18 +605,32 @@ class _RestaurantHeader extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.store, color: Colors.white70, size: 14),
+                          const Icon(
+                            Icons.store,
+                            color: Colors.white70,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             restaurant.branchesDisplay,
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(width: 16),
-                          const Icon(Icons.location_on, color: Colors.white70, size: 14),
+                          const Icon(
+                            Icons.location_on,
+                            color: Colors.white70,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             restaurant.branchLocation,
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -503,11 +643,19 @@ class _RestaurantHeader extends StatelessWidget {
                   children: [
                     IconButton(
                       onPressed: isBusy ? null : onEdit,
-                      icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                     ),
                     IconButton(
                       onPressed: isBusy ? null : onDelete,
-                      icon: const Icon(Icons.delete_outline, color: Colors.white70, size: 20),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -522,13 +670,14 @@ class _RestaurantHeader extends StatelessWidget {
 
 class _BagCard extends StatelessWidget {
   final AddProductInputEntity bag;
+  final VoidCallback? onDelete;
 
-  const _BagCard({required this.bag});
+  const _BagCard({required this.bag, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final oldPrice = bag.oldPrice ?? bag.price;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       padding: const EdgeInsets.all(12),
@@ -564,7 +713,7 @@ class _BagCard extends StatelessWidget {
                   ),
           ),
           const SizedBox(width: 12),
-          
+
           // ── Bag Info ──────────────────────────────────────────────
           Expanded(
             child: Column(
@@ -583,11 +732,15 @@ class _BagCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                
+
                 // Pickup Time
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 12, color: Colors.grey.shade500),
+                    Icon(
+                      Icons.access_time,
+                      size: 12,
+                      color: Colors.grey.shade500,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -603,13 +756,16 @@ class _BagCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                
+
                 // ── Price & Bags Left Row ────────────────────────────
                 Row(
                   children: [
                     // Bags Left Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(12),
@@ -617,7 +773,11 @@ class _BagCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.shopping_bag_outlined, size: 12, color: Colors.orange.shade600),
+                          Icon(
+                            Icons.shopping_bag_outlined,
+                            size: 12,
+                            color: Colors.orange.shade600,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             '${bag.bagsLeft} left',
@@ -631,18 +791,18 @@ class _BagCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    
+
                     // Old Price
                     if (oldPrice > bag.price)
                       Text(
-                        '${oldPrice.toStringAsFixed(0)}',
+                        oldPrice.toStringAsFixed(0),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
-                    
+
                     // New Price
                     Text(
                       '${bag.price.toStringAsFixed(0)} EGP',
@@ -657,24 +817,45 @@ class _BagCard extends StatelessWidget {
               ],
             ),
           ),
-          
-          // ── Reserve Button ────────────────────────────────────────
-          ElevatedButton(
-            onPressed: () {
-              // Reserve action
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade400,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text(
-              'Reserve',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-            ),
+
+          // ── Actions ──────────────────────────────────────────────
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  // Reserve action
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange.shade400,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'Reserve',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 4),
+              IconButton(
+                tooltip: 'Delete product',
+                onPressed: onDelete,
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -699,12 +880,22 @@ class _EmptyState extends StatelessWidget {
               color: AppColors.primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.store_outlined, size: 50, color: AppColors.primaryColor.withValues(alpha: 0.5)),
+            child: Icon(
+              Icons.store_outlined,
+              size: 50,
+              color: AppColors.primaryColor.withValues(alpha: 0.5),
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('No Restaurants Yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text(
+            'No Restaurants Yet',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          Text('Add your first restaurant to start selling bags.', style: TextStyle(color: Colors.grey.shade600)),
+          Text(
+            'Add your first restaurant to start selling bags.',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: onAdd,
@@ -733,9 +924,17 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 60, color: AppColors.errorColor.withValues(alpha: 0.5)),
+          Icon(
+            Icons.error_outline,
+            size: 60,
+            color: AppColors.errorColor.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onRetry,

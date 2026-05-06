@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:uuid/uuid.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 
 class AddProductInputModel {
@@ -15,7 +16,7 @@ class AddProductInputModel {
   final String? restaurantId;
   final String? restaurantName;
   final String? pickupTime;
-
+  final String? productId;
   AddProductInputModel({
     this.docId,
     required this.isAvailable,
@@ -30,6 +31,7 @@ class AddProductInputModel {
     this.restaurantId,
     this.restaurantName,
     this.pickupTime,
+    this.productId,
   });
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
@@ -47,6 +49,7 @@ class AddProductInputModel {
       restaurantId: entity.restaurantId,
       restaurantName: entity.restaurantName,
       pickupTime: entity.pickupTime,
+      productId: entity.productId,
     );
   }
 
@@ -66,6 +69,7 @@ class AddProductInputModel {
       restaurantId: json['restaurantId'] as String?,
       restaurantName: json['restaurantName'] as String?,
       pickupTime: json['pickupTime'] as String?,
+      productId: json['productId'] as String?,
     );
   }
 
@@ -84,6 +88,7 @@ class AddProductInputModel {
       imageUrl: imageUrl,
       restaurantId: restaurantId,
       restaurantName: restaurantName,
+      productId: productId,
     );
   }
 
@@ -101,6 +106,7 @@ class AddProductInputModel {
       'restaurantName': restaurantName,
       'oldPrice': oldPrice,
       'pickupTime': pickupTime,
+      'productId': productId ?? const Uuid().v4(),
     };
   }
 }
