@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 
 class AddProductInputEntity {
   final String? docId;
@@ -14,9 +15,13 @@ class AddProductInputEntity {
   String? restaurantId;
   String? restaurantName;
   final String? pickupTime;
+  final String? productId;
+  final List<ReviewEntity> reviews;
+  final double avgRating;
 
   AddProductInputEntity({
     this.docId,
+    this.productId,
     required this.isAvailable,
     required this.title,
     required this.price,
@@ -29,5 +34,7 @@ class AddProductInputEntity {
     this.restaurantId,
     this.restaurantName,
     this.pickupTime,
+    this.reviews = const [],
+    this.avgRating = 0.0,
   });
 }

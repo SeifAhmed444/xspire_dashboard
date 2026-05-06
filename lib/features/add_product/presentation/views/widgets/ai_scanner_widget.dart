@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:xspire_dashboard/core/services/segmentation_service.dart';
 import 'package:xspire_dashboard/core/services/food_detection_service.dart';
@@ -14,18 +15,20 @@ class AiScannerWidget extends StatefulWidget {
   State<AiScannerWidget> createState() => _AiScannerWidgetState();
 }
 
-class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProviderStateMixin {
+class _AiScannerWidgetState extends State<AiScannerWidget>
+    with SingleTickerProviderStateMixin {
   File? _image;
   bool _isScanning = false;
   List<SegmentationResult> _segmentationResults = [];
   String? _detectedFood;
   Size? _imageSize;
-  
+
   late AnimationController _animationController;
   late Animation<double> _scanAnimation;
 
   final SegmentationService _segmentationService = SegmentationService();
   final FoodDetectionService _foodDetectionService = FoodDetectionService();
+  bool _isPicking = false;
 
   @override
   void initState() {
@@ -34,10 +37,9 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
       vsync: this,
       duration: const Duration(seconds: 1, milliseconds: 500),
     );
-    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _animationController.reverse();
@@ -55,28 +57,43 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
   }
 
   Future<void> _pickImageAndScan() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 80,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        _isScanning = true;
-        _segmentationResults = [];
-        _detectedFood = null;
-      });
-      _animationController.forward();
-
-      final decodedImage = await decodeImageFromList(await _image!.readAsBytes());
-      setState(() {
-        _imageSize = Size(decodedImage.width.toDouble(), decodedImage.height.toDouble());
-      });
-      
-      await _performScan(_image!);
+    if (_isPicking) return;
+    _isPicking = true;
+    XFile? pickedFile;
+    try {
+      pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+    } on PlatformException catch (e) {
+      debugPrint('ImagePicker platform error: ${e.code} ${e.message}');
+    } catch (e) {
+      debugPrint('ImagePicker error: $e');
+    } finally {
+      _isPicking = false;
     }
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _image = File(pickedFile!.path);
+      _isScanning = true;
+      _segmentationResults = [];
+      _detectedFood = null;
+    });
+    _animationController.forward();
+
+    final decodedImage = await decodeImageFromList(await _image!.readAsBytes());
+    setState(() {
+      _imageSize = Size(
+        decodedImage.width.toDouble(),
+        decodedImage.height.toDouble(),
+      );
+    });
+
+    await _performScan(_image!);
   }
 
   Future<void> _performScan(File imageFile) async {
@@ -90,25 +107,35 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
       if (fullImage == null) throw Exception("Failed to decode image");
 
       // 2. Classify whole image as fallback/main
-      final mainPrediction = await _foodDetectionService.detectFoodFromImage(fullImage);
+      final mainPrediction = await _foodDetectionService.detectFoodFromImage(
+        fullImage,
+      );
       if (mainPrediction != null && mainPrediction.score > 0.05) {
         allDetectedUnique.add(mainPrediction.label);
       }
-      
+
       // 3. ML Kit Object Detection (For precise bounding boxes)
       try {
-        final mlKitObjects = await _segmentationService.detectObjects(imageFile);
-        
+        final mlKitObjects = await _segmentationService.detectObjects(
+          imageFile,
+        );
+
         for (var obj in mlKitObjects) {
           final box = obj.boundingBox;
           int left = box.left.toInt().clamp(0, fullImage.width - 1);
           int top = box.top.toInt().clamp(0, fullImage.height - 1);
           int width = box.width.toInt().clamp(1, fullImage.width - left);
           int height = box.height.toInt().clamp(1, fullImage.height - top);
-          
-          img.Image crop = img.copyCrop(fullImage, x: left, y: top, width: width, height: height);
+
+          img.Image crop = img.copyCrop(
+            fullImage,
+            x: left,
+            y: top,
+            width: width,
+            height: height,
+          );
           final result = await _foodDetectionService.detectFoodFromImage(crop);
-          
+
           String finalLabel;
           // Low threshold (0.02) because ML Kit confirmed there is a real object here
           if (result != null && result.score > 0.02) {
@@ -119,22 +146,30 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
             finalLabel = obj.label;
           }
 
-          updatedResults.add(SegmentationResult(
-            boundingBox: box, 
-            label: finalLabel
-          ));
+          updatedResults.add(
+            SegmentationResult(boundingBox: box, label: finalLabel),
+          );
         }
 
         // 4. Fallback: If ML Kit found absolutely ZERO boxes (happens when one giant plate fills the screen, like Koshary)
         // We manually draw one big box covering the center of the image so the user isn't left without any boxes!
-        if (mlKitObjects.isEmpty && mainPrediction != null && mainPrediction.score > 0.05) {
+        if (mlKitObjects.isEmpty &&
+            mainPrediction != null &&
+            mainPrediction.score > 0.05) {
           double w = fullImage.width.toDouble();
           double h = fullImage.height.toDouble();
-          
-          updatedResults.add(SegmentationResult(
-            boundingBox: Rect.fromLTWH(w * 0.1, h * 0.1, w * 0.8, h * 0.8), // 80% of the center screen
-            label: mainPrediction.label
-          ));
+
+          updatedResults.add(
+            SegmentationResult(
+              boundingBox: Rect.fromLTWH(
+                w * 0.1,
+                h * 0.1,
+                w * 0.8,
+                h * 0.8,
+              ), // 80% of the center screen
+              label: mainPrediction.label,
+            ),
+          );
         }
       } catch (e) {
         debugPrint("ML Kit error: $e");
@@ -148,7 +183,7 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
     if (mounted) {
       setState(() {
         _segmentationResults = updatedResults;
-        
+
         if (allDetectedUnique.isEmpty) {
           _detectedFood = "Food Item Recognized";
         } else {
@@ -162,18 +197,12 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
     }
   }
 
-  String _getCombinedResults(List<SegmentationResult> results) {
-    if (results.isEmpty) return "No Food Detected";
-    final uniqueLabels = results.map((e) => e.label).toSet().toList();
-    if (uniqueLabels.length == 1) return uniqueLabels.first;
-    return uniqueLabels.join(", ");
-  }
+  // Combined results helper removed (not used)
 
   @override
   Widget build(BuildContext context) {
     // ... inside state
-    String displayResults = _getCombinedResults(_segmentationResults);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -189,19 +218,21 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                 color: _isScanning ? Colors.cyanAccent : Colors.white12,
                 width: _isScanning ? 2 : 1,
               ),
-              boxShadow: _isScanning ? [
-                BoxShadow(
-                  color: Colors.cyanAccent.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                )
-              ] : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                )
-              ],
+              boxShadow: _isScanning
+                  ? [
+                      BoxShadow(
+                        color: Colors.cyanAccent.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
@@ -213,28 +244,35 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.document_scanner, size: 60, color: Colors.cyanAccent),
+                          Icon(
+                            Icons.document_scanner,
+                            size: 60,
+                            color: Colors.cyanAccent,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Tap to Scan Image',
                             style: TextStyle(
-                              color: Colors.white, 
-                              fontSize: 16, 
+                              color: Colors.white,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2
+                              letterSpacing: 1.2,
                             ),
                           ),
                           SizedBox(height: 8),
                           Text(
                             'Powered by Advanced AI Segmentation',
-                            style: TextStyle(color: Colors.white54, fontSize: 12),
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
                     )
                   else ...[
                     Image.file(_image!, fit: BoxFit.contain),
-                    
+
                     if (_isScanning)
                       AnimatedBuilder(
                         animation: _scanAnimation,
@@ -245,7 +283,7 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                             right: 0,
                             child: Container(
                               height: 4,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: Colors.cyanAccent,
                                 boxShadow: [
                                   BoxShadow(
@@ -259,12 +297,17 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                           );
                         },
                       ),
-                      
-                    if (!_isScanning && _segmentationResults.isNotEmpty && _imageSize != null)
+
+                    if (!_isScanning &&
+                        _segmentationResults.isNotEmpty &&
+                        _imageSize != null)
                       CustomPaint(
-                        painter: BoundingBoxPainter(_segmentationResults, _imageSize!),
+                        painter: BoundingBoxPainter(
+                          _segmentationResults,
+                          _imageSize!,
+                        ),
                       ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -284,8 +327,8 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                   color: Colors.blue.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
-                )
-              ]
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -304,8 +347,8 @@ class _AiScannerWidgetState extends State<AiScannerWidget> with SingleTickerProv
                 const Icon(Icons.check_circle_outline, color: Colors.white),
               ],
             ),
-          )
-        ]
+          ),
+        ],
       ],
     );
   }
@@ -323,10 +366,10 @@ class BoundingBoxPainter extends CustomPainter {
 
     final double scaleX = size.width / imageSize.width;
     final double scaleY = size.height / imageSize.height;
-    
+
     // Maintain aspect ratio fit based on BoxFit.contain behavior
     double scale = scaleX < scaleY ? scaleX : scaleY;
-    
+
     double dx = (size.width - imageSize.width * scale) / 2;
     double dy = (size.height - imageSize.height * scale) / 2;
 
@@ -334,18 +377,18 @@ class BoundingBoxPainter extends CustomPainter {
       ..color = Colors.pinkAccent
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
-      
+
     final Paint fillPaint = Paint()
       ..color = Colors.pinkAccent.withOpacity(0.2)
       ..style = PaintingStyle.fill;
-      
+
     final TextPainter textPainter = TextPainter(
       textDirection: TextDirection.ltr,
     );
 
     for (var result in results) {
       final rect = result.boundingBox;
-      
+
       final scaledRect = Rect.fromLTRB(
         rect.left * scale + dx,
         rect.top * scale + dy,
@@ -355,21 +398,28 @@ class BoundingBoxPainter extends CustomPainter {
 
       canvas.drawRect(scaledRect, fillPaint);
       canvas.drawRect(scaledRect, boxPaint);
-      
+
       // Draw label background
       final RRect labelBadge = RRect.fromRectAndRadius(
         Rect.fromLTWH(scaledRect.left, scaledRect.top - 24, 120, 24),
-        const Radius.circular(4)
+        const Radius.circular(4),
       );
       canvas.drawRRect(labelBadge, Paint()..color = Colors.pinkAccent);
-      
+
       // Draw text
       textPainter.text = TextSpan(
         text: ' ${result.label}',
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(scaledRect.left + 4, scaledRect.top - 20));
+      textPainter.paint(
+        canvas,
+        Offset(scaledRect.left + 4, scaledRect.top - 20),
+      );
     }
   }
 

@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'package:uuid/uuid.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
+import 'package:xspire_dashboard/features/manage_data/data/models/review_model.dart';
+import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 
 class AddProductInputModel {
   final String? docId;
@@ -11,10 +14,13 @@ class AddProductInputModel {
   final List<String>? detectedItems;
   final String? userEmail;
   final File? image;
-  String? imageUrl;
+  final String? imageUrl;
   final String? restaurantId;
   final String? restaurantName;
   final String? pickupTime;
+  final String? productId;
+  final List<ReviewEntity> reviews;
+  final double avgRating;
 
   AddProductInputModel({
     this.docId,
@@ -30,15 +36,18 @@ class AddProductInputModel {
     this.restaurantId,
     this.restaurantName,
     this.pickupTime,
+    this.productId,
+    this.reviews = const [],
+    this.avgRating = 0.0,
   });
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
     return AddProductInputModel(
-      docId: entity.docId,
       isAvailable: entity.isAvailable,
       title: entity.title,
       price: entity.price,
       oldPrice: entity.oldPrice,
+      reviews: entity.reviews,
       bagsLeft: entity.bagsLeft,
       detectedItems: entity.detectedItems,
       userEmail: entity.userEmail,
@@ -47,17 +56,28 @@ class AddProductInputModel {
       restaurantId: entity.restaurantId,
       restaurantName: entity.restaurantName,
       pickupTime: entity.pickupTime,
+      productId: entity.productId,
+      avgRating: entity.avgRating,
     );
   }
 
   factory AddProductInputModel.fromJson(Map<String, dynamic> json) {
+    final reviewsList =
+        (json['reviews'] as List<dynamic>?)
+            ?.map(
+              (rev) =>
+                  ReviewModel.fromMap(rev as Map<String, dynamic>).toEntity(),
+            )
+            .toList() ??
+        [];
+
     return AddProductInputModel(
-      docId: json['docId'] as String?,
       isAvailable: json['isAvailable'] as bool? ?? false,
       title: json['title'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       oldPrice: (json['oldPrice'] as num?)?.toDouble(),
       bagsLeft: json['bagsLeft'] as int? ?? 0,
+      reviews: reviewsList,
       detectedItems: (json['detectedItems'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList(),
@@ -66,6 +86,9 @@ class AddProductInputModel {
       restaurantId: json['restaurantId'] as String?,
       restaurantName: json['restaurantName'] as String?,
       pickupTime: json['pickupTime'] as String?,
+      productId: json['productId'] as String?,
+      docId: json['docId'] as String?,
+      avgRating: (json['avgRating'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -84,16 +107,31 @@ class AddProductInputModel {
       imageUrl: imageUrl,
       restaurantId: restaurantId,
       restaurantName: restaurantName,
+      productId: productId,
+      reviews: reviews,
+      avgRating: avgRating,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'docId': docId,
       'isAvailable': isAvailable,
       'title': title,
       'price': price,
       'bagsLeft': bagsLeft,
+      'reviews': reviews
+          .map(
+            (r) => ReviewModel(
+              id: r.id,
+              userId: r.userId,
+              name: r.name,
+              image: r.image,
+              review: r.review,
+              rating: r.rating,
+              date: r.date,
+            ).toJson(),
+          )
+          .toList(),
       'detectedItems': detectedItems,
       'userEmail': userEmail,
       'imageUrl': imageUrl,
@@ -101,6 +139,8 @@ class AddProductInputModel {
       'restaurantName': restaurantName,
       'oldPrice': oldPrice,
       'pickupTime': pickupTime,
+      'productId': productId ?? const Uuid().v4(),
+      'avgRating': avgRating,
     };
   }
 }

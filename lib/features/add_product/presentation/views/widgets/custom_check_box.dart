@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
-
 import '../../../../../core/utils/app_colors.dart';
 
 class CustomCheckBox extends StatelessWidget {
-  const CustomCheckBox(
-      {super.key, required this.isChecked, required this.onChecked});
+  const CustomCheckBox({
+    super.key,
+    required this.isChecked,
+    required this.onChecked,
+  });
   final bool isChecked;
   final ValueChanged<bool> onChecked;
   @override
@@ -29,8 +31,7 @@ class CustomCheckBox extends StatelessWidget {
           ),
         ),
         child: isChecked
-            ? Icon(Icons.check,
-            color: Colors.white,)
+            ? const Icon(Icons.check, color: Colors.white)
             : const SizedBox(),
       ),
     );

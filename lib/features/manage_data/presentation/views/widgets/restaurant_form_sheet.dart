@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
@@ -28,7 +29,9 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   bool _isAvailable = false;
   File? _pickedImage;
   bool _isSubmitting = false;
+  // ignore: unused_field
   int _branchCount = 1;
+  bool _isPickingImage = false;
 
   bool get _isEdit => widget.existing != null;
 
@@ -37,11 +40,13 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     super.initState();
     final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
-    
+
     // For edit mode, use the existing branch info
     if (_isEdit && e != null) {
       _branchCount = e.totalBranches;
-      _branchesCountCtrl = TextEditingController(text: e.totalBranches.toString());
+      _branchesCountCtrl = TextEditingController(
+        text: e.totalBranches.toString(),
+      );
       // Add one controller for this branch's location
       _branchLocationCtrls.add(TextEditingController(text: e.branchLocation));
     } else {
@@ -49,7 +54,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
       _branchCount = 1;
       _branchLocationCtrls.add(TextEditingController());
     }
-    
+
     _isOpend = e?.isOpend ?? false;
     _isAvailable = e?.isAvailable ?? false;
   }
@@ -107,7 +112,9 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                     Text(
                       _isEdit ? 'Edit Restaurant' : 'Add Restaurant',
                       style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -146,7 +153,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                           onChanged: _onBranchCountChanged,
                         ),
                         const SizedBox(height: 14),
-                        
+
                         // ── Dynamic Branch Location Fields ──────────────
                         ..._buildBranchLocationFields(),
                         const SizedBox(height: 16),
@@ -163,8 +170,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                           label: 'Is Available',
                           icon: Icons.check_circle_outline_rounded,
                           value: _isAvailable,
-                          onChanged: (v) =>
-                              setState(() => _isAvailable = v),
+                          onChanged: (v) => setState(() => _isAvailable = v),
                         ),
                         const SizedBox(height: 20),
 
@@ -198,11 +204,14 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF424242))),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF424242),
+          ),
+        ),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -216,28 +225,32 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Icon(icon, size: 20, color: AppColors.primaryColor),
             ),
-            hintStyle:
-                TextStyle(color: Colors.grey[400], fontSize: 14),
+            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
             filled: true,
             fillColor: const Color(0xFFF9FAFA),
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFFE0E0E0))),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFFE0E0E0))),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                    color: AppColors.primaryColor, width: 2)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.primaryColor,
+                width: 2,
+              ),
+            ),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: AppColors.errorColor)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.errorColor),
+            ),
             contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ],
@@ -262,9 +275,10 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
           Icon(icon, size: 18, color: AppColors.primaryColor),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
           ),
           Switch.adaptive(
             value: value,
@@ -277,15 +291,18 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   }
 
   Widget _buildImagePicker() {
-    final existingUrl = widget.existing?.imageUrl;
+    final existingUrl = widget.existing?.RestaurantimageUrl;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Restaurant Image',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF424242))),
+        const Text(
+          'Restaurant Image',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF424242),
+          ),
+        ),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: _pickImage,
@@ -295,9 +312,10 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: AppColors.primaryColor.withOpacity(0.4),
-                  width: 1.5,
-                  style: BorderStyle.solid),
+                color: AppColors.primaryColor.withOpacity(0.4),
+                width: 1.5,
+                style: BorderStyle.solid,
+              ),
               color: AppColors.primaryColor.withOpacity(0.03),
             ),
             child: _pickedImage != null
@@ -306,34 +324,41 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                     child: Image.file(_pickedImage!, fit: BoxFit.cover),
                   )
                 : existingUrl != null && existingUrl.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.network(existingUrl, fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    _imagePlaceholder()),
-                            Positioned(
-                              bottom: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Text('Tap to change',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11)),
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(13),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          existingUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Tap to change',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      )
-                    : _imagePlaceholder(),
+                      ],
+                    ),
+                  )
+                : _imagePlaceholder(),
           ),
         ),
       ],
@@ -344,22 +369,40 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_photo_alternate_outlined,
-            size: 40, color: AppColors.primaryColor.withOpacity(0.5)),
+        Icon(
+          Icons.add_photo_alternate_outlined,
+          size: 40,
+          color: AppColors.primaryColor.withOpacity(0.5),
+        ),
         const SizedBox(height: 8),
-        Text('Tap to select image',
-            style: TextStyle(
-                fontSize: 13, color: Colors.grey[500])),
+        Text(
+          'Tap to select image',
+          style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+        ),
       ],
     );
   }
 
   Future<void> _pickImage() async {
+    if (_isPickingImage) return;
+    _isPickingImage = true;
     final picker = ImagePicker();
-    final xfile =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    XFile? xfile;
+    try {
+      xfile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+    } on PlatformException catch (e) {
+      debugPrint('ImagePicker platform error: ${e.code} ${e.message}');
+    } catch (e) {
+      debugPrint('ImagePicker error: $e');
+    } finally {
+      _isPickingImage = false;
+    }
+
     if (xfile != null) {
-      setState(() => _pickedImage = File(xfile.path));
+      setState(() => _pickedImage = File(xfile!.path));
     }
   }
 
@@ -373,9 +416,10 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: AppColors.primaryColor.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4))
+              color: AppColors.primaryColor.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: ElevatedButton(
@@ -383,7 +427,8 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           onPressed: _isSubmitting ? null : _submit,
           child: _isSubmitting
@@ -391,14 +436,17 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2.5),
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
                 )
               : Text(
                   _isEdit ? 'Save Changes' : 'Add Restaurant',
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700),
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
         ),
       ),
@@ -408,7 +456,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   void _onBranchCountChanged(String value) {
     final count = int.tryParse(value) ?? 1;
     if (count < 1) return;
-    
+
     setState(() {
       // Adjust the number of controllers
       if (count > _branchLocationCtrls.length) {
@@ -445,6 +493,26 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Check if logo is selected for new restaurants or if image is required for editing
+    if (_pickedImage == null && !_isEdit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Expanded(child: Text('Please add a restaurant logo before saving')),
+            ],
+          ),
+          backgroundColor: AppColors.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+    
     setState(() => _isSubmitting = true);
 
     final cubit = context.read<RestaurantCubit>();
@@ -467,7 +535,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
       final branchLocations = _branchLocationCtrls
           .map((ctrl) => ctrl.text.trim())
           .toList();
-      
+
       cubit.addRestaurantsWithBranches(
         name: name,
         branchLocations: branchLocations,
