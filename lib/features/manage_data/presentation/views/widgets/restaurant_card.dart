@@ -39,9 +39,10 @@ class RestaurantCard extends StatelessWidget {
           children: [
             // ── Image ──────────────────────────────────────────────────
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-              child: _RestaurantImage(imageUrl: restaurant.imageUrl),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              child: _RestaurantImage(imageUrl: restaurant.RestaurantimageUrl),
             ),
 
             Padding(
@@ -57,9 +58,10 @@ class RestaurantCard extends StatelessWidget {
                         child: Text(
                           restaurant.displayName,
                           style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1A1A2E)),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -88,7 +90,9 @@ class RestaurantCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   _InfoRow(
                     icon: Icons.check_circle_outline_rounded,
-                    label: restaurant.isAvailable ? 'Available' : 'Not Available',
+                    label: restaurant.isAvailable
+                        ? 'Available'
+                        : 'Not Available',
                     color: restaurant.isAvailable
                         ? AppColors.primaryColor
                         : AppColors.grey,
@@ -163,16 +167,22 @@ class _RestaurantImage extends StatelessWidget {
                 color: AppColors.primaryColor,
               ),
             )
-          : Icon(Icons.restaurant_rounded,
-              size: 48, color: AppColors.primaryColor.withOpacity(0.2)),
+          : Icon(
+              Icons.restaurant_rounded,
+              size: 48,
+              color: AppColors.primaryColor.withOpacity(0.2),
+            ),
     );
   }
 }
 
 // ── Info Row ──────────────────────────────────────────────────────────────────
 class _InfoRow extends StatelessWidget {
-  const _InfoRow(
-      {required this.icon, required this.label, required this.color});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
   final IconData icon;
   final String label;
   final Color color;
@@ -187,7 +197,10 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-                fontSize: 12, color: color, fontWeight: FontWeight.w500),
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -210,9 +223,14 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -249,24 +267,25 @@ class _ActionButton extends StatelessWidget {
           boxShadow: isGradient
               ? [
                   BoxShadow(
-                      color: AppColors.primaryColor.withOpacity(0.2),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3))
+                    color: AppColors.primaryColor.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
                 ]
               : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                color: isGradient ? Colors.white : color, size: 15),
+            Icon(icon, color: isGradient ? Colors.white : color, size: 15),
             const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                  color: isGradient ? Colors.white : color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600),
+                color: isGradient ? Colors.white : color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

@@ -12,7 +12,7 @@ class RestaurantModel {
   final int branchIndex;
   final bool isOpend;
   final bool isAvailable;
-  final String? imageUrl;
+  final String? RestaurantimageUrl;
   final String? userEmail;
   final DateTime? createdAt;
   final List<ReviewModel> reviews;
@@ -25,7 +25,7 @@ class RestaurantModel {
     required this.branchIndex,
     required this.isOpend,
     required this.isAvailable,
-    this.imageUrl,
+    this.RestaurantimageUrl,
     this.userEmail,
     this.createdAt,
     this.reviews = const [],
@@ -54,7 +54,7 @@ class RestaurantModel {
       branchIndex: json['branchIndex'] as int? ?? 1,
       isOpend: json['isOpend'] as bool? ?? false,
       isAvailable: json['isAvailable'] as bool? ?? false,
-      imageUrl: json['imageUrl'] as String?,
+      RestaurantimageUrl: json['RestaurantimageUrl  '] as String?,
       userEmail: json['userEmail'] as String?,
       createdAt: parsedCreatedAt,
       reviews:
@@ -75,7 +75,7 @@ class RestaurantModel {
       branchIndex: entity.branchIndex,
       isOpend: entity.isOpend,
       isAvailable: entity.isAvailable,
-      imageUrl: entity.imageUrl,
+      RestaurantimageUrl: entity.RestaurantimageUrl,
       userEmail: entity.userEmail,
       reviews: entity.reviews
           .map(
@@ -101,7 +101,7 @@ class RestaurantModel {
     'branchIndex': branchIndex,
     'isOpend': isOpend,
     'isAvailable': isAvailable,
-    'imageUrl': imageUrl,
+    'RestaurantimageUrl': RestaurantimageUrl,
     'userEmail': userEmail,
     'createdAt': FieldValue.serverTimestamp(),
     'reviews': reviews
@@ -127,7 +127,7 @@ class RestaurantModel {
     'branchIndex': branchIndex,
     'isOpend': isOpend,
     'isAvailable': isAvailable,
-    'imageUrl': imageUrl,
+    'RestaurantimageUrl': RestaurantimageUrl,
     'userEmail': userEmail,
     'reviews': reviews
         .map(
@@ -153,7 +153,7 @@ class RestaurantModel {
     branchIndex: branchIndex,
     isOpend: isOpend,
     isAvailable: isAvailable,
-    imageUrl: imageUrl,
+    RestaurantimageUrl: RestaurantimageUrl,
     userEmail: userEmail,
     reviews: reviews.map((r) => r.toEntity()).toList(),
   );

@@ -291,7 +291,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
   }
 
   Widget _buildImagePicker() {
-    final existingUrl = widget.existing?.imageUrl;
+    final existingUrl = widget.existing?.RestaurantimageUrl;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

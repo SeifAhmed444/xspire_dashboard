@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' show min;
 import 'package:xspire_dashboard/core/services/get_it_services.dart' show getIt;
 import 'package:xspire_dashboard/core/repos/product_repo/products_repo.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/restaurant_usecases.dart';
@@ -535,33 +536,79 @@ class _AnalyticsViewState extends State<AnalyticsView> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Debug: Fetched Data'),
+        title: const Text('Debug: Analytics Data'),
         content: SizedBox(
           width: 520,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Restaurants fetched: ${_restaurants.length}'),
-                Text('Total reviews counted: $totalReviews'),
+                Text(
+                  'Restaurants: ${_restaurants.length}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text('Total Reviews: $totalReviews'),
+                Text('Total Products: $totalProducts'),
+                Text('Avg Rating: ${averageRating.toStringAsFixed(2)}'),
+                const SizedBox(height: 16),
+                const Text(
+                  'Restaurant Breakdown:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 ..._restaurants.map((r) {
+                  final products = _productsByRestaurant[r.docId] ?? [];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '- ${r.name} (${r.docId ?? 'no-id'}) — ${r.reviews.length} reviews',
-                        ),
-                        if (r.reviews.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8, top: 4),
-                            child: Text(
-                              '  sample: ${r.reviews.first.review} | rating: ${r.reviews.first.rating} | user: ${r.reviews.first.userId}',
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${r.name} (${r.docId?.substring(0, 8) ?? 'no-id'}...)',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '📦 Products: ${products.length}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            '⭐ Reviews: ${r.reviews.length}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.deepOrange,
                             ),
                           ),
-                      ],
+                          if (r.reviews.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade50,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                '✓ Sample: "${r.reviews.first.review?.substring(0, min(r.reviews.first.review?.length ?? 0, 40)) ?? 'N/A'}..." (${r.reviews.first.rating}★ by ${r.reviews.first.name ?? 'Anon'})',
+                                style: const TextStyle(fontSize: 11),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ] else
+                            Text(
+                              '✗ No reviews',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.red.shade600,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 }),

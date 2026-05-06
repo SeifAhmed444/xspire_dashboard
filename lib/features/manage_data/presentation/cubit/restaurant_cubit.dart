@@ -31,13 +31,10 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     emit(RestaurantLoading());
     final result = await fetchRestaurantsUseCase(userEmail);
     if (isClosed) return;
-    result.fold(
-      (failure) => emit(RestaurantError(failure.message)),
-      (list) {
-        _localList = list;
-        _emitListState();
-      },
-    );
+    result.fold((failure) => emit(RestaurantError(failure.message)), (list) {
+      _localList = list;
+      _emitListState();
+    });
   }
 
   // ── Add multiple restaurants (one per branch) ─────────────────────────────
@@ -57,13 +54,10 @@ class RestaurantCubit extends Cubit<RestaurantState> {
       if (imageFile != null) {
         final uploadResult = await uploadImageUseCase(imageFile);
         bool uploadFailed = false;
-        uploadResult.fold(
-          (failure) {
-            emit(RestaurantError(failure.message, restaurants: _localList));
-            uploadFailed = true;
-          },
-          (url) => imageUrl = url,
-        );
+        uploadResult.fold((failure) {
+          emit(RestaurantError(failure.message, restaurants: _localList));
+          uploadFailed = true;
+        }, (url) => imageUrl = url);
         if (uploadFailed) return;
       }
 
@@ -79,19 +73,16 @@ class RestaurantCubit extends Cubit<RestaurantState> {
           branchIndex: i + 1,
           isOpend: isOpend,
           isAvailable: isAvailable,
-          imageUrl: imageUrl,
+          RestaurantimageUrl: imageUrl,
           userEmail: userEmail,
         );
 
         final result = await addRestaurantUseCase(entity);
-        final success = result.fold(
-          (failure) {
-            emit(RestaurantError(failure.message, restaurants: _localList));
-            return null;
-          },
-          (saved) => saved,
-        );
-        
+        final success = result.fold((failure) {
+          emit(RestaurantError(failure.message, restaurants: _localList));
+          return null;
+        }, (saved) => saved);
+
         if (success != null) {
           savedRestaurants.add(success);
         }
@@ -120,21 +111,17 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     required bool isAvailable,
     File? newImageFile,
   }) async {
-    emit(RestaurantOperationLoading(_localList,
-        operationId: existing.docId));
+    emit(RestaurantOperationLoading(_localList, operationId: existing.docId));
     try {
       // 1. Upload new image if provided
-      String? imageUrl = existing.imageUrl;
+      String? RestaurantimageUrl = existing.RestaurantimageUrl;
       if (newImageFile != null) {
         final uploadResult = await uploadImageUseCase(newImageFile);
         bool uploadFailed = false;
-        uploadResult.fold(
-          (failure) {
-            emit(RestaurantError(failure.message, restaurants: _localList));
-            uploadFailed = true;
-          },
-          (url) => imageUrl = url,
-        );
+        uploadResult.fold((failure) {
+          emit(RestaurantError(failure.message, restaurants: _localList));
+          uploadFailed = true;
+        }, (url) => RestaurantimageUrl = url);
         if (uploadFailed) return;
       }
 
@@ -144,7 +131,7 @@ class RestaurantCubit extends Cubit<RestaurantState> {
         totalBranches: totalBranches,
         isOpend: isOpend,
         isAvailable: isAvailable,
-        imageUrl: imageUrl,
+        RestaurantimageUrl: RestaurantimageUrl,
       );
 
       final result = await updateRestaurantUseCase(updated);
@@ -156,8 +143,12 @@ class RestaurantCubit extends Cubit<RestaurantState> {
           _localList = _localList
               .map((r) => r.docId == saved.docId ? saved : r)
               .toList();
-          emit(RestaurantOperationSuccess(
-              _localList, 'Restaurant updated successfully'));
+          emit(
+            RestaurantOperationSuccess(
+              _localList,
+              'Restaurant updated successfully',
+            ),
+          );
         },
       );
     } catch (e) {
@@ -171,7 +162,8 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     final backup = List<RestaurantEntity>.from(_localList);
     _localList = _localList.where((r) => r.docId != docId).toList();
     _emitListState(
-        override: RestaurantOperationLoading(_localList, operationId: docId));
+      override: RestaurantOperationLoading(_localList, operationId: docId),
+    );
 
     final result = await deleteRestaurantUseCase(docId);
     result.fold(

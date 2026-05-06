@@ -464,9 +464,9 @@ class _RestaurantHeader extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        image: restaurant.imageUrl != null
+        image: restaurant.RestaurantimageUrl != null
             ? DecorationImage(
-                image: NetworkImage(restaurant.imageUrl!),
+                image: NetworkImage(restaurant.RestaurantimageUrl!),
                 fit: BoxFit.cover,
                 colorFilter: ColorFilter.mode(
                   Colors.black.withValues(alpha: 0.3),
@@ -474,7 +474,7 @@ class _RestaurantHeader extends StatelessWidget {
                 ),
               )
             : null,
-        gradient: restaurant.imageUrl == null
+        gradient: restaurant.RestaurantimageUrl == null
             ? const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -576,11 +576,11 @@ class _RestaurantHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: restaurant.imageUrl != null
+                  child: restaurant.RestaurantimageUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            restaurant.imageUrl!,
+                            restaurant.RestaurantimageUrl!,
                             fit: BoxFit.cover,
                             width: 50,
                             height: 50,

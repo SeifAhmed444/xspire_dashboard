@@ -10,7 +10,7 @@ class RestaurantEntity {
   final int branchIndex; // Index of this branch (1, 2, 3, ...)
   final bool isOpend;
   final bool isAvailable;
-  final String? imageUrl; // Remote URL (Supabase)
+  final String? RestaurantimageUrl; // Remote URL (Supabase)
   final File? imageFile; // Local file picked by the user (edit flow)
   final String? userEmail;
   final List<ReviewEntity> reviews;
@@ -23,7 +23,7 @@ class RestaurantEntity {
     required this.branchIndex,
     required this.isOpend,
     required this.isAvailable,
-    this.imageUrl,
+    this.RestaurantimageUrl,
     this.imageFile,
     this.userEmail,
     this.reviews = const [],
@@ -43,7 +43,7 @@ class RestaurantEntity {
     int? branchIndex,
     bool? isOpend,
     bool? isAvailable,
-    String? imageUrl,
+    String? RestaurantimageUrl,
     File? imageFile,
     String? userEmail,
     List<ReviewEntity>? reviews,
@@ -56,7 +56,7 @@ class RestaurantEntity {
       branchIndex: branchIndex ?? this.branchIndex,
       isOpend: isOpend ?? this.isOpend,
       isAvailable: isAvailable ?? this.isAvailable,
-      imageUrl: imageUrl ?? this.imageUrl,
+      RestaurantimageUrl: RestaurantimageUrl ?? RestaurantimageUrl,
       imageFile: imageFile ?? this.imageFile,
       userEmail: userEmail ?? this.userEmail,
       reviews: reviews ?? this.reviews,

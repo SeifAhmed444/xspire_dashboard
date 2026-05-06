@@ -3,7 +3,6 @@ import 'package:uuid/uuid.dart';
 import 'package:xspire_dashboard/features/add_product/domain/entities/add_product_input_entity.dart';
 
 class AddProductInputModel {
-  final String? docId;
   final bool isAvailable;
   final String title;
   final double price;
@@ -12,13 +11,12 @@ class AddProductInputModel {
   final List<String>? detectedItems;
   final String? userEmail;
   final File? image;
-  String? imageUrl;
+  final String? imageUrl;
   final String? restaurantId;
   final String? restaurantName;
   final String? pickupTime;
   final String? productId;
   AddProductInputModel({
-    this.docId,
     required this.isAvailable,
     required this.title,
     required this.price,
@@ -36,7 +34,6 @@ class AddProductInputModel {
 
   factory AddProductInputModel.fromEntity(AddProductInputEntity entity) {
     return AddProductInputModel(
-      docId: entity.docId,
       isAvailable: entity.isAvailable,
       title: entity.title,
       price: entity.price,
@@ -55,7 +52,6 @@ class AddProductInputModel {
 
   factory AddProductInputModel.fromJson(Map<String, dynamic> json) {
     return AddProductInputModel(
-      docId: json['docId'] as String?,
       isAvailable: json['isAvailable'] as bool? ?? false,
       title: json['title'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
@@ -75,7 +71,6 @@ class AddProductInputModel {
 
   AddProductInputEntity toEntity() {
     return AddProductInputEntity(
-      docId: docId,
       isAvailable: isAvailable,
       title: title,
       price: price,
@@ -94,7 +89,6 @@ class AddProductInputModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'docId': docId,
       'isAvailable': isAvailable,
       'title': title,
       'price': price,

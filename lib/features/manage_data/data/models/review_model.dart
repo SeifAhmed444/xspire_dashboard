@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/restaurant_entity.dart';
 
 class ReviewModel {
@@ -22,7 +23,13 @@ class ReviewModel {
   factory ReviewModel.fromMap(Map<String, dynamic> map) {
     DateTime? parsedDate;
     final raw = map['date'];
-    if (raw is String) {
+
+    // Handle Firestore Timestamp objects
+    if (raw is Timestamp) {
+      parsedDate = raw.toDate();
+    }
+    // Handle ISO 8601 strings
+    else if (raw is String) {
       try {
         parsedDate = DateTime.tryParse(raw);
       } catch (_) {}
