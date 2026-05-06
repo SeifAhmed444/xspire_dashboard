@@ -62,7 +62,7 @@ class _IsFeaturedCheckBoxState extends State<IsFeaturedCheckBox> {
           },
           isChecked: _isChecked,
         ),
-        Expanded(child: const SizedBox(width: 16)),
+        const Expanded(child: SizedBox(width: 16)),
       ],
     );
   }
