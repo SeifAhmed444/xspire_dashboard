@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'dart:math' show min;
 import 'package:xspire_dashboard/core/services/get_it_services.dart' show getIt;
@@ -937,7 +939,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: latestReviews.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final item = latestReviews[index];
         final r = item.review;

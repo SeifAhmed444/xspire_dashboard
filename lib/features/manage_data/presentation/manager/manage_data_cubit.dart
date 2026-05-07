@@ -1,5 +1,7 @@
 // lib/features/manage_data/presentation/manager/manage_data_cubit.dart
 
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:bloc/bloc.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/local_data_entity.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/usecases/delete_local_data_usecase.dart';
@@ -24,17 +26,14 @@ class ManageDataCubit extends Cubit<ManageDataState> {
 
     final result = await getLocalDataUseCase();
 
-    result.fold(
-      (failure) => emit(ManageDataError(failure.message)),
-      (items) {
-        _currentItems = List.from(items);
-        if (items.isEmpty) {
-          emit(ManageDataEmpty());
-        } else {
-          emit(ManageDataLoaded(items));
-        }
-      },
-    );
+    result.fold((failure) => emit(ManageDataError(failure.message)), (items) {
+      _currentItems = List.from(items);
+      if (items.isEmpty) {
+        emit(ManageDataEmpty());
+      } else {
+        emit(ManageDataLoaded(items));
+      }
+    });
   }
 
   Future<void> deleteItem(String id) async {

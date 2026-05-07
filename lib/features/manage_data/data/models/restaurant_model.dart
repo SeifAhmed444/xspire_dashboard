@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 import 'package:xspire_dashboard/features/manage_data/data/models/review_model.dart';

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/localization/app_localizations.dart';
@@ -93,7 +95,7 @@ class DashboardViewBody extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      AppLocalizations.of(context).appTitle,
+                                      AppLocalizations.of(context)!.appTitle,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 20,
@@ -104,7 +106,7 @@ class DashboardViewBody extends StatelessWidget {
                                     Text(
                                       AppLocalizations.of(
                                         context,
-                                      ).foodOutletManagement,
+                                      )!.foodOutletManagement,
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,
@@ -130,7 +132,7 @@ class DashboardViewBody extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context).quickActions,
+                    AppLocalizations.of(context)!.quickActions,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -146,8 +148,8 @@ class DashboardViewBody extends StatelessWidget {
                       Expanded(
                         child: _ActionCard(
                           icon: Icons.shopping_bag_outlined,
-                          label: AppLocalizations.of(context).addBagItemLabel,
-                          subtitle: AppLocalizations.of(context).scanAddBags,
+                          label: AppLocalizations.of(context)!.addBagItemLabel,
+                          subtitle: AppLocalizations.of(context)!.scanAddBags,
                           gradient: AppColors.primaryGradient,
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -162,10 +164,10 @@ class DashboardViewBody extends StatelessWidget {
                           icon: Icons.add_business_outlined,
                           label: AppLocalizations.of(
                             context,
-                          ).addRestaurantLabel,
+                          )!.addRestaurantLabel,
                           subtitle: AppLocalizations.of(
                             context,
-                          ).createNewRestaurant,
+                          )!.createNewRestaurant,
                           gradient: const LinearGradient(
                             colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
                             begin: Alignment.topLeft,
@@ -188,8 +190,10 @@ class DashboardViewBody extends StatelessWidget {
                           icon: Icons.manage_search_rounded,
                           label: AppLocalizations.of(
                             context,
-                          ).manageRestaurantsLabel,
-                          subtitle: AppLocalizations.of(context).viewEditDelete,
+                          )!.manageRestaurantsLabel,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.viewEditDelete,
                           gradient: const LinearGradient(
                             colors: [Color(0xFF1565C0), Color(0xFF1976D2)],
                             begin: Alignment.topLeft,
@@ -208,7 +212,7 @@ class DashboardViewBody extends StatelessWidget {
                           icon: Icons.analytics_outlined,
                           label: AppLocalizations.of(
                             context,
-                          ).analyticsStatsLabel,
+                          )!.analyticsStatsLabel,
                           subtitle: 'View reviews & ratings',
                           gradient: const LinearGradient(
                             colors: [Color(0xFFFF9800), Color(0xFFFFA726)],

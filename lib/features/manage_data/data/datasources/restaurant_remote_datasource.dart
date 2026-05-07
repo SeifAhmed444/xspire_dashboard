@@ -1,3 +1,5 @@
+// ignore_for_file: library_prefixes
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';

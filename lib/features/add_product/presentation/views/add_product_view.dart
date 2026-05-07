@@ -34,7 +34,7 @@ class AddProductView extends StatelessWidget {
         ),
       ],
       child: Scaffold(
-        appBar: buildAppBar(AppLocalizations.of(context).addBagItem),
+        appBar: buildAppBar(AppLocalizations.of(context)!.addBagItem),
         body: const AddProductViewBodyBlocBuilder(),
       ),
     );

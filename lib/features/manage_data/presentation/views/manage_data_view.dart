@@ -41,7 +41,7 @@ class _ManageDataScaffold extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          AppLocalizations.of(context).manageRestaurants,
+          AppLocalizations.of(context)!.manageRestaurants,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         leading: IconButton(
@@ -51,9 +51,9 @@ class _ManageDataScaffold extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => context
-                .read<RestaurantCubit>()
-                .fetchRestaurants(UserSession.instance.currentEmail),
+            onPressed: () => context.read<RestaurantCubit>().fetchRestaurants(
+              UserSession.instance.currentEmail,
+            ),
           ),
         ],
       ),
@@ -74,9 +74,11 @@ class _ManageDataScaffold extends StatelessWidget {
         backgroundColor: AppColors.primaryColor,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(
-          AppLocalizations.of(context).addRestaurant,
+          AppLocalizations.of(context)!.addRestaurant,
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600),
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
