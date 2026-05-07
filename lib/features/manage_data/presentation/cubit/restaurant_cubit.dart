@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages, non_constant_identifier_names
+
 import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';

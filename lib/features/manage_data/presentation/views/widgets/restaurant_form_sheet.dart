@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -332,7 +334,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                         Image.network(
                           existingUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                          errorBuilder: (_, _, _) => _imagePlaceholder(),
                         ),
                         Positioned(
                           bottom: 8,
@@ -493,7 +495,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // Check if logo is selected for new restaurants or if image is required for editing
     if (_pickedImage == null && !_isEdit) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -502,17 +504,21 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
             children: [
               Icon(Icons.error_outline, color: Colors.white, size: 18),
               SizedBox(width: 8),
-              Expanded(child: Text('Please add a restaurant logo before saving')),
+              Expanded(
+                child: Text('Please add a restaurant logo before saving'),
+              ),
             ],
           ),
           backgroundColor: AppColors.errorColor,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
     }
-    
+
     setState(() => _isSubmitting = true);
 
     final cubit = context.read<RestaurantCubit>();

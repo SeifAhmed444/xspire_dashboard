@@ -1,3 +1,5 @@
+// ignore_for_file: recursive_getters
+
 import 'generated/app_localizations.dart';
 
 export 'generated/app_localizations.dart';

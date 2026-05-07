@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:io';
 
 /// Core domain entity — no dependency on any framework or data layer.

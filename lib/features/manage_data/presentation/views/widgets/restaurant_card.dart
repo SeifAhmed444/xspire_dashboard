@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
@@ -147,7 +149,7 @@ class _RestaurantImage extends StatelessWidget {
         height: 160,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(),
+        errorBuilder: (_, _, _) => _placeholder(),
         loadingBuilder: (_, child, progress) =>
             progress == null ? child : _placeholder(loading: true),
       );

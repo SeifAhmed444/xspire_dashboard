@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:xspire_dashboard/core/helper_functions/build_bar.dart';
@@ -6,9 +8,7 @@ import 'package:xspire_dashboard/features/add_product/presentation/manager/cubit
 import 'package:xspire_dashboard/features/add_product/presentation/views/widgets/add_product_view_body.dart';
 
 class AddProductViewBodyBlocBuilder extends StatelessWidget {
-  const AddProductViewBodyBlocBuilder({
-    super.key,
-  });
+  const AddProductViewBodyBlocBuilder({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +17,12 @@ class AddProductViewBodyBlocBuilder extends StatelessWidget {
         if (state is AddProductSuccess) {
           showErrorBar(context, 'Product Added Successfully');
         }
-          if (state is AddProductFailure) {
-            showErrorBar(context, state.errMessage);
-          }
+        if (state is AddProductFailure) {
+          showErrorBar(context, state.errMessage);
+        }
       },
       builder: (context, state) {
         return CustomModalProgressHUD(
-          
           inAsyncCall: state is AddProductLoading,
           child: const AddProductViewBody(),
         );
