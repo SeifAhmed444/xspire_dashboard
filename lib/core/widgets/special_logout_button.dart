@@ -1,16 +1,13 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 
 class SpecialLogoutButton extends StatefulWidget {
-  const SpecialLogoutButton({
-    super.key,
-    required this.onPressed,
-    this.text = 'Logout',
-  });
+  const SpecialLogoutButton({super.key, required this.onPressed, this.text});
 
   final VoidCallback onPressed;
-  final String text;
+  final String? text;
 
   @override
   State<SpecialLogoutButton> createState() => _SpecialLogoutButtonState();
@@ -53,6 +50,8 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
   }
 
   void _showLogoutConfirmation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -93,9 +92,9 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Confirm Logout',
-                  style: TextStyle(
+                Text(
+                  l10n.confirmLogout,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1F5E3B),
@@ -103,7 +102,7 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Are you sure you want to logout?',
+                  l10n.areYouSureLogout,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -127,10 +126,10 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
                               width: 1,
                             ),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Cancel',
-                              style: TextStyle(
+                              l10n.cancel,
+                              style: const TextStyle(
                                 color: Color(0xFF424242),
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -164,10 +163,10 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
                               ),
                             ],
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Logout',
-                              style: TextStyle(
+                              l10n.logoutButton,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -189,6 +188,8 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Transform.rotate(
@@ -231,7 +232,7 @@ class _SpecialLogoutButtonState extends State<SpecialLogoutButton>
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    widget.text,
+                    widget.text ?? l10n.logoutButton,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
