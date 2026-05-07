@@ -10,6 +10,7 @@ import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/core/widgets/custom_button.dart';
 import 'package:xspire_dashboard/core/widgets/custom_text_field.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/cubit/restaurant_cubit.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 
 class AddRestaurantSimple extends StatefulWidget {
   static const routeName = 'add_restaurant_simple';
@@ -106,9 +107,9 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
           backgroundColor: AppColors.primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          title: const Text(
-            'Add Restaurant',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          title: Text(
+            AppLocalizations.of(context)!.addRestaurant,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
@@ -169,7 +170,9 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            'Add Logo',
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.addLogo,
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.grey.shade500,
@@ -185,43 +188,51 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                           // Restaurant Name
                           CustomTextFormField(
                             controller: _nameController,
-                            hintText: 'Restaurant Name (e.g. Madbina)',
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.restaurantNameExample,
                             textInputType: TextInputType.text,
                             prefixIcon: Icon(
                               Icons.restaurant,
                               color: Colors.grey.shade500,
                             ),
-                            validator: (v) =>
-                                v?.isEmpty == true ? 'Required' : null,
+                            validator: (v) => v?.isEmpty == true
+                                ? AppLocalizations.of(context)!.requiredLabel
+                                : null,
                           ),
                           const SizedBox(height: 16),
 
                           // Number of Branches
                           CustomTextFormField(
                             controller: _branchesCountController,
-                            hintText: 'Number of Branches',
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.numberOfBranches,
                             textInputType: TextInputType.number,
                             prefixIcon: Icon(
                               Icons.store_mall_directory_outlined,
                               color: Colors.grey.shade500,
                             ),
-                            validator: (v) =>
-                                v?.isEmpty == true ? 'Required' : null,
+                            validator: (v) => v?.isEmpty == true
+                                ? AppLocalizations.of(context)!.requiredLabel
+                                : null,
                           ),
                           const SizedBox(height: 16),
 
                           // Branch Location
                           CustomTextFormField(
                             controller: _branchLocationController,
-                            hintText:
-                                'Branch Location (e.g. Zamalek, 2 Taha Hussein)',
+                            hintText: AppLocalizations.of(
+                              context,
+                            )!.branchLocationExample,
                             textInputType: TextInputType.text,
                             prefixIcon: Icon(
                               Icons.location_on_outlined,
                               color: Colors.grey.shade500,
                             ),
-                            validator: (v) =>
-                                v?.isEmpty == true ? 'Required' : null,
+                            validator: (v) => v?.isEmpty == true
+                                ? AppLocalizations.of(context)!.requiredLabel
+                                : null,
                           ),
                           const SizedBox(height: 24),
 
@@ -230,7 +241,7 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                             children: [
                               Expanded(
                                 child: _buildToggle(
-                                  'Available',
+                                  AppLocalizations.of(context)!.available,
                                   _isAvailable,
                                   Icons.check_circle,
                                   (v) => setState(() => _isAvailable = v),
@@ -239,7 +250,7 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _buildToggle(
-                                  'Open Now',
+                                  AppLocalizations.of(context)!.openNow,
                                   _isOpenNow,
                                   Icons.access_time,
                                   (v) => setState(() => _isOpenNow = v),
@@ -267,7 +278,9 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
                     ),
                     child: CustomButton(
                       onPressed: isLoading ? () {} : _saveRestaurant,
-                      text: isLoading ? 'Saving...' : 'Save Restaurant',
+                      text: isLoading
+                          ? AppLocalizations.of(context)!.saving
+                          : AppLocalizations.of(context)!.saveRestaurant,
                       useGradient: true,
                     ),
                   ),
@@ -342,11 +355,11 @@ class _AddRestaurantSimpleState extends State<AddRestaurantSimple> {
     if (_logoImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 18),
-              SizedBox(width: 8),
-              Text('Please add a restaurant logo before saving'),
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context)!.restaurantLogoRequired),
             ],
           ),
           backgroundColor: AppColors.errorColor,

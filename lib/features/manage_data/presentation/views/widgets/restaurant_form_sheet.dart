@@ -9,6 +9,7 @@ import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/core/utils/app_colors.dart';
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/cubit/restaurant_cubit.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 
 /// Single bottom sheet used for both Add and Edit flows.
 /// Pass [existing] to enter edit mode.
@@ -112,7 +113,9 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                 child: Row(
                   children: [
                     Text(
-                      _isEdit ? 'Edit Restaurant' : 'Add Restaurant',
+                      _isEdit
+                          ? AppLocalizations.of(context)!.editRestaurant
+                          : AppLocalizations.of(context)!.addRestaurant,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -141,14 +144,14 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                       children: [
                         _buildField(
                           controller: _nameCtrl,
-                          label: 'Restaurant Name',
+                          label: AppLocalizations.of(context)!.restaurantName,
                           hint: 'e.g. Burger Palace',
                           icon: Icons.storefront_rounded,
                         ),
                         const SizedBox(height: 14),
                         _buildField(
                           controller: _branchesCountCtrl,
-                          label: 'Number of Branches',
+                          label: AppLocalizations.of(context)!.numberOfBranches,
                           hint: 'e.g. 2',
                           icon: Icons.store_mall_directory_outlined,
                           keyboardType: TextInputType.number,
@@ -162,14 +165,14 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
 
                         // ── Toggles ───────────────────────────────────────
                         _buildToggleRow(
-                          label: 'Is Open',
+                          label: AppLocalizations.of(context)!.openNow,
                           icon: Icons.access_time_rounded,
                           value: _isOpend,
                           onChanged: (v) => setState(() => _isOpend = v),
                         ),
                         const SizedBox(height: 10),
                         _buildToggleRow(
-                          label: 'Is Available',
+                          label: AppLocalizations.of(context)!.available,
                           icon: Icons.check_circle_outline_rounded,
                           value: _isAvailable,
                           onChanged: (v) => setState(() => _isAvailable = v),
@@ -348,9 +351,9 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                               color: Colors.black54,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              'Tap to change',
-                              style: TextStyle(
+                            child: Text(
+                              AppLocalizations.of(context)!.tapToChange,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
                               ),
@@ -378,7 +381,7 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Tap to select image',
+          AppLocalizations.of(context)!.tapToSelectImage,
           style: TextStyle(fontSize: 13, color: Colors.grey[500]),
         ),
       ],
@@ -443,7 +446,9 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
                   ),
                 )
               : Text(
-                  _isEdit ? 'Save Changes' : 'Add Restaurant',
+                  _isEdit
+                      ? AppLocalizations.of(context)!.saveChanges
+                      : AppLocalizations.of(context)!.addRestaurant,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -500,12 +505,14 @@ class _RestaurantFormSheetState extends State<RestaurantFormSheet> {
     if (_pickedImage == null && !_isEdit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.error_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
               Expanded(
-                child: Text('Please add a restaurant logo before saving'),
+                child: Text(
+                  AppLocalizations.of(context)!.restaurantLogoRequired,
+                ),
               ),
             ],
           ),
