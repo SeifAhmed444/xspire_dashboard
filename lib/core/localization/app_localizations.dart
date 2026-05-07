@@ -72,7 +72,7 @@ extension AppLocalizationsCompat on AppLocalizations {
   String get requiredLabel => required_label;
   String get loadingBags => loading_bags;
   String get availableBags => available_bags;
-  String get bagsLeftLabel => bags_left_label;
+  // String get bagsLeftLabel => bags_left_label;
   String get reserveButton => reserve_button;
   String get deleteProduct => delete_product;
   String get noRestaurantsYetCta => no_restaurants_yet_cta;
@@ -102,12 +102,12 @@ extension AppLocalizationsCompat on AppLocalizations {
   String get noReviews => no_reviews;
   String get pickupDefault => pickup_default;
   String get deleteRestaurant => delete_restaurant;
-  String get deleteRestaurantConfirm => delete_restaurant_confirm;
+  // String get deleteRestaurantConfirm => delete_restaurant_confirm;
   String get deleteProductConfirm => delete_product_confirm;
   String get productDeleted => product_deleted;
-  String get productCount => product_count;
-  String get availableHidden => available_hidden;
-  String get reviewsLowStock => reviews_low_stock;
-  String get noReviewsCount => no_reviews_count;
-  String get discountedCount => discounted_count;
+  // String get productCount => product_count;
+  // String get availableHidden => available_hidden;
+  // String get reviewsLowStock => reviews_low_stock;
+  // String get noReviewsCount => no_reviews_count;
+  // String get discountedCount => discounted_count;
 }
