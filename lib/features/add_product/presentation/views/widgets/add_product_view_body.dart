@@ -139,7 +139,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                           const Icon(Icons.auto_awesome, color: Colors.green),
                           const SizedBox(width: 8),
                           Text(
-                            AppLocalizations.of(context).verifyDetectedItems,
+                            AppLocalizations.of(context)!.verifyDetectedItems,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -178,7 +178,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         onChanged: (v) => item.name = v,
                                         decoration: InputDecoration(
                                           labelText:
-                                              '${AppLocalizations.of(context).bagItem} ${idx + 1}',
+                                              '${AppLocalizations.of(context)!.bagItem} ${idx + 1}',
                                           labelStyle: const TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,
@@ -213,7 +213,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                       ),
                                       tooltip: AppLocalizations.of(
                                         context,
-                                      ).deleteItem,
+                                      )!.deleteItem,
                                     ),
                                   ],
                                 ),
@@ -240,7 +240,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         Text(
                                           AppLocalizations.of(
                                             context,
-                                          ).willBeDeleted,
+                                          )!.willBeDeleted,
                                           style: const TextStyle(
                                             color: Colors.red,
                                             fontSize: 12,
@@ -254,7 +254,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                             });
                                           },
                                           child: Text(
-                                            AppLocalizations.of(context).undo,
+                                            AppLocalizations.of(context)!.undo,
                                             style: const TextStyle(
                                               color: Colors.red,
                                               fontSize: 12,
@@ -280,7 +280,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         decoration: InputDecoration(
                                           labelText: AppLocalizations.of(
                                             context,
-                                          ).oldPriceEgp,
+                                          )!.oldPriceEgp,
                                           labelStyle: const TextStyle(
                                             color: Colors.orange,
                                             fontWeight: FontWeight.bold,
@@ -318,7 +318,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                         decoration: InputDecoration(
                                           labelText: AppLocalizations.of(
                                             context,
-                                          ).newPriceEgp,
+                                          )!.newPriceEgp,
                                           labelStyle: const TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,
@@ -455,7 +455,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          AppLocalizations.of(context).noItemsToSave,
+                          AppLocalizations.of(context)!.noItemsToSave,
                         ),
                         backgroundColor: Colors.red,
                       ),
@@ -556,7 +556,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
               ),
               const SizedBox(width: 8),
               Text(
-                AppLocalizations.of(context).selectRestaurant,
+                AppLocalizations.of(context)!.selectRestaurant,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -579,7 +579,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          AppLocalizations.of(context).noRestaurantsYet,
+                          AppLocalizations.of(context)!.noRestaurantsYet,
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 14,
@@ -592,7 +592,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
               : DropdownButtonFormField<RestaurantEntity>(
                   initialValue: selectedRestaurant,
                   hint: Text(
-                    AppLocalizations.of(context).chooseRestaurant,
+                    AppLocalizations.of(context)!.chooseRestaurant,
                     style: TextStyle(color: Colors.grey.shade500),
                   ),
                   isExpanded: true,
@@ -662,7 +662,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                     if (value == null) {
                       return AppLocalizations.of(
                         context,
-                      ).pleaseSelectRestaurant;
+                      )!.pleaseSelectRestaurant;
                     }
                     return null;
                   },
