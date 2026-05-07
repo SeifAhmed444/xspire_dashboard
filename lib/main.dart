@@ -14,6 +14,7 @@ import 'package:xspire_dashboard/core/services/user_session.dart';
 import 'package:xspire_dashboard/features/auth/presentation/views/Login_view.dart';
 import 'package:xspire_dashboard/features/dashboard/view/dashboard_view.dart';
 import 'package:xspire_dashboard/firebase_options.dart';
+import 'package:xspire_dashboard/core/widgets/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,21 +49,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLoggedIn = Prefs.getBool(isloggedin) && UserSession.instance.isLoggedIn;
+    final isLoggedIn =
+        Prefs.getBool(isloggedin) && UserSession.instance.isLoggedIn;
+    final initialRoute = isLoggedIn
+        ? DashboardView.routeName
+        : LoginView.routeName;
+
     return BlocProvider(
       create: (_) => LocaleCubit(),
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            initialRoute: isLoggedIn ? DashboardView.routeName : LoginView.routeName,
+            // Use an in-app splash wrapper which navigates to the correct initial route
+            home: SplashWrapper(initialRoute: initialRoute),
             onGenerateRoute: onGenerateRoutes,
             theme: _buildAppTheme(),
             locale: locale,
-            supportedLocales: const [
-              Locale('en'),
-              Locale('ar'),
-            ],
+            supportedLocales: const [Locale('en'), Locale('ar')],
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -144,8 +148,7 @@ class MyApp extends StatelessWidget {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF1F5E3B),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -161,15 +164,16 @@ class MyApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Color(0xFF1F5E3B), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF1F5E3B), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE53935)),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         hintStyle: const TextStyle(
           color: Color(0xFF949D9E),
           fontSize: 14,
@@ -178,8 +182,7 @@ class MyApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: Colors.white,
       ),
     );

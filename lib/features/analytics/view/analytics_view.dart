@@ -40,6 +40,21 @@ class _AnalyticsViewState extends State<AnalyticsView> {
   List<AddProductInputEntity> unreviewedProducts = [];
   List<AddProductInputEntity> discountedProducts = [];
 
+  ImageProvider<Object>? _reviewAvatarImage(String? imageUrl) {
+    if (imageUrl == null) return null;
+    final trimmed = imageUrl.trim();
+    if (trimmed.isEmpty) return null;
+
+    final uri = Uri.tryParse(trimmed);
+    final isHttpUrl =
+        uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty;
+    if (!isHttpUrl) return null;
+
+    return NetworkImage(trimmed);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -943,6 +958,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       itemBuilder: (context, index) {
         final item = latestReviews[index];
         final r = item.review;
+        final avatarImage = _reviewAvatarImage(r.image);
         return Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -954,10 +970,8 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundImage: r.image != null
-                      ? NetworkImage(r.image!)
-                      : null,
-                  child: r.image == null ? const Icon(Icons.person) : null,
+                  backgroundImage: avatarImage,
+                  child: avatarImage == null ? const Icon(Icons.person) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

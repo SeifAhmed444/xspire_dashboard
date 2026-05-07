@@ -8,6 +8,7 @@ import 'package:xspire_dashboard/features/add_product/domain/entities/add_produc
 import 'package:xspire_dashboard/features/manage_data/domain/entities/restaurant_entity.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/cubit/restaurant_cubit.dart';
 import 'package:xspire_dashboard/features/manage_data/presentation/views/widgets/restaurant_form_sheet.dart';
+import 'package:xspire_dashboard/core/localization/app_localizations.dart';
 
 class ManageRestaurantsWithBagsBody extends StatefulWidget {
   const ManageRestaurantsWithBagsBody({super.key});
@@ -203,27 +204,27 @@ class _ManageRestaurantsWithBagsBodyState
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.warning_amber_rounded,
               color: AppColors.errorColor,
               size: 24,
             ),
-            SizedBox(width: 10),
-            Text('Delete Restaurant'),
+            const SizedBox(width: 10),
+            Text(AppLocalizations.of(context)!.deleteRestaurant),
           ],
         ),
         content: Text(
-          'Delete "${entity.name}"? This cannot be undone.',
+          AppLocalizations.of(context)!.delete_restaurant_confirm(entity.name),
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.primaryColor),
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: const TextStyle(color: AppColors.primaryColor),
             ),
           ),
           ElevatedButton(
@@ -238,7 +239,7 @@ class _ManageRestaurantsWithBagsBodyState
               Navigator.pop(context);
               if (entity.docId != null) cubit.deleteRestaurant(entity.docId!);
             },
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -256,16 +257,16 @@ class _ManageRestaurantsWithBagsBodyState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete product'),
-        content: const Text('Delete this product? This cannot be undone.'),
+        title: Text(AppLocalizations.of(context)!.deleteProduct),
+        content: Text(AppLocalizations.of(context)!.deleteProductConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -299,8 +300,8 @@ class _ManageRestaurantsWithBagsBodyState
       (_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Product deleted'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.productDeleted),
             backgroundColor: AppColors.successColor,
           ),
         );
