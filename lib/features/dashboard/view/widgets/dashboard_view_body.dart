@@ -29,7 +29,7 @@ class DashboardViewBody extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7F5),
+        backgroundColor: const Color(0xFFF5EFD7),
         body: CustomScrollView(
           slivers: [
             // ── Header ───────────────────────────────────────────────────────

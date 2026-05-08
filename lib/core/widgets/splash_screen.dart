@@ -98,7 +98,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
           child: FadeTransition(
             opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_fade),
             child: Container(
-              color: Colors.transparent,
+              color: const Color(0xFFF5EFD7),
               child: Stack(
                 children: [
                   // Background gradient SVG
@@ -133,21 +133,12 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                             ),
                             child: ClipOval(
                               child: Image.asset(
-                                'assets/icons/icon3.PNG',
+                                'assets/icons/Dashboard_App_Icon.jpeg',
                                 fit: BoxFit.cover,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
+                     
                         ],
                       ),
                     ),
