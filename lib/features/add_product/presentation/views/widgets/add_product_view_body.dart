@@ -239,13 +239,16 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                           size: 16,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          AppLocalizations.of(
-                                            context,
-                                          )!.willBeDeleted,
-                                          style: const TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 12,
+                                        Flexible(
+                                          child: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.willBeDeleted,
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         const SizedBox(width: 4),
@@ -283,25 +286,44 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                           labelText: AppLocalizations.of(
                                             context,
                                           )!.oldPriceEgp,
-                                          labelStyle: const TextStyle(
-                                            color: Colors.orange,
-                                            fontWeight: FontWeight.bold,
+                                          labelStyle: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
                                           ),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
+                                            borderSide: BorderSide(
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: Colors.grey.shade300,
+                                            ),
                                           ),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                 horizontal: 12,
-                                                vertical: 8,
+                                                vertical: 10,
                                               ),
                                           hintText: 'Enter original price',
+                                          hintStyle: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade400,
+                                          ),
                                         ),
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey.shade500,
+                                          decoration:
+                                              TextDecoration.lineThrough,
                                         ),
                                       ),
                                     ),
@@ -310,6 +332,7 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                     const Icon(
                                       Icons.arrow_forward,
                                       color: Colors.grey,
+                                      size: 18,
                                     ),
                                     const SizedBox(width: 12),
                                     // New Price (auto-calculated, read-only)
@@ -321,33 +344,45 @@ class _AddProductViewBodyState extends State<AddProductViewBody> {
                                           labelText: AppLocalizations.of(
                                             context,
                                           )!.newPriceEgp,
-                                          labelStyle: const TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
+                                          labelStyle: TextStyle(
+                                            color: Colors.green.shade700,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
                                           ),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
+                                            borderSide: BorderSide(
+                                              color: Colors.green.shade300,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: Colors.green.shade300,
+                                            ),
                                           ),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                 horizontal: 12,
-                                                vertical: 8,
+                                                vertical: 10,
                                               ),
                                           filled: true,
                                           fillColor: Colors.green.shade50,
-                                          suffixText: '(-60%)',
+                                          suffixText: ' EGP',
                                           suffixStyle: TextStyle(
                                             color: Colors.green.shade700,
                                             fontSize: 12,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        style: const TextStyle(
-                                          fontSize: 15,
+                                        style: TextStyle(
+                                          fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green,
+                                          color: Colors.green.shade700,
                                         ),
                                       ),
                                     ),
