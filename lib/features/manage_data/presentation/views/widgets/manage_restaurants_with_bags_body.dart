@@ -166,12 +166,292 @@ class _ManageRestaurantsWithBagsBodyState
                 onEdit: () => _showEditSheet(context, restaurant),
                 onDelete: () => _confirmDelete(context, restaurant),
                 onDeleteProduct: _deleteProduct,
+                onEditBag: _showEditBagDialog,
+                onRestockBag: _restockBag,
               );
             },
           ),
         );
       },
     );
+  }
+
+  Future<void> _restockBag(
+    BuildContext context,
+    String? restaurantId,
+    AddProductInputEntity bag,
+  ) async {
+    final currentBagsLeft = bag.bagsLeft;
+    final newBagsLeft = currentBagsLeft + 5; // Add 5 bags by default
+
+    final updatedBag = AddProductInputEntity(
+      docId: bag.docId,
+      productId: bag.productId,
+      isAvailable: bag.isAvailable,
+      title: bag.title,
+      price: bag.price,
+      oldPrice: bag.oldPrice,
+      bagsLeft: newBagsLeft,
+      detectedItems: bag.detectedItems,
+      imageUrl: bag.imageUrl,
+      userEmail: bag.userEmail,
+      restaurantId: bag.restaurantId,
+      restaurantName: bag.restaurantName,
+      pickupTime: bag.pickupTime,
+      reviews: bag.reviews,
+      avgRating: bag.avgRating,
+    );
+
+    // Optimistic update
+    setState(() {
+      final list = _restaurantBags[restaurantId] ?? [];
+      final index = list.indexWhere((b) => b.productId == bag.productId);
+      if (index != -1) {
+        list[index] = updatedBag;
+        _restaurantBags[restaurantId!] = List.from(list);
+      }
+    });
+
+    final docId = bag.productId ?? bag.docId;
+    if (docId != null) {
+      final updateResult = await _productsRepo.updateProduct(docId, updatedBag);
+      updateResult.fold(
+        (failure) {
+          // Revert on failure
+          setState(() {
+            final list = _restaurantBags[restaurantId] ?? [];
+            final index = list.indexWhere((b) => b.productId == bag.productId);
+            if (index != -1) {
+              list[index] = bag;
+              _restaurantBags[restaurantId!] = List.from(list);
+            }
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to restock: ${failure.message}'),
+              backgroundColor: AppColors.errorColor,
+            ),
+          );
+        },
+        (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Restocked! Added 5 bags (Total: $newBagsLeft)'),
+              backgroundColor: AppColors.successColor,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> _showEditBagDialog(
+    BuildContext context,
+    String? restaurantId,
+    AddProductInputEntity bag,
+  ) async {
+    final titleCtrl = TextEditingController(text: bag.title);
+    final priceCtrl = TextEditingController(
+      text: bag.price > 0 ? bag.price.toStringAsFixed(2) : '',
+    );
+    final oldPriceCtrl = TextEditingController(
+      text: bag.oldPrice != null && bag.oldPrice! > 0
+          ? bag.oldPrice!.toStringAsFixed(2)
+          : '',
+    );
+    final bagsLeftCtrl = TextEditingController(
+      text: bag.bagsLeft > 0 ? bag.bagsLeft.toString() : '',
+    );
+    bool isAvailable = bag.isAvailable;
+
+    // Helper to parse price (handles both comma and dot as decimal separator)
+    double? parsePrice(String text) {
+      if (text.trim().isEmpty) return null;
+      // Replace comma with dot for Arabic locale compatibility
+      final normalized = text.trim().replaceAll(',', '.');
+      return double.tryParse(normalized);
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.edit, color: AppColors.primaryColor, size: 24),
+                  const SizedBox(width: 10),
+                  const Text('Edit Bag'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        prefixIcon: Icon(Icons.shopping_bag_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: oldPriceCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Old Price',
+                              prefixIcon: Icon(Icons.attach_money),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: priceCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'New Price *',
+                              prefixIcon: Icon(Icons.local_offer_outlined),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: bagsLeftCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Bags Left *',
+                        prefixIcon: Icon(Icons.inventory_2_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Available'),
+                        const Spacer(),
+                        Switch(
+                          value: isAvailable,
+                          onChanged: (v) => setDialogState(() => isAvailable = v),
+                          activeColor: AppColors.primaryColor,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      final price = parsePrice(priceCtrl.text) ?? 0.0;
+      final oldPrice = parsePrice(oldPriceCtrl.text);
+      final bagsLeft = int.tryParse(bagsLeftCtrl.text) ?? 0;
+
+      if (price <= 0 || bagsLeft <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Price and bags left must be greater than 0'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+        return;
+      }
+
+      final updatedBag = AddProductInputEntity(
+        docId: bag.docId,
+        productId: bag.productId,
+        isAvailable: isAvailable,
+        title: titleCtrl.text.trim(),
+        price: price,
+        oldPrice: oldPrice != null && oldPrice > 0 ? oldPrice : null,
+        bagsLeft: bagsLeft,
+        detectedItems: bag.detectedItems,
+        imageUrl: bag.imageUrl,
+        userEmail: bag.userEmail,
+        restaurantId: bag.restaurantId,
+        restaurantName: bag.restaurantName,
+        pickupTime: bag.pickupTime,
+        reviews: bag.reviews,
+        avgRating: bag.avgRating,
+      );
+
+      // Optimistic update
+      setState(() {
+        final list = _restaurantBags[restaurantId] ?? [];
+        final index = list.indexWhere((b) => b.productId == bag.productId);
+        if (index != -1) {
+          list[index] = updatedBag;
+          _restaurantBags[restaurantId!] = List.from(list);
+        }
+      });
+
+      final docId = bag.productId ?? bag.docId;
+      if (docId != null) {
+        final updateResult = await _productsRepo.updateProduct(docId, updatedBag);
+        updateResult.fold(
+          (failure) {
+            // Revert on failure
+            setState(() {
+              final list = _restaurantBags[restaurantId] ?? [];
+              final index = list.indexWhere((b) => b.productId == bag.productId);
+              if (index != -1) {
+                list[index] = bag;
+                _restaurantBags[restaurantId!] = List.from(list);
+              }
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update: ${failure.message}'),
+                backgroundColor: AppColors.errorColor,
+              ),
+            );
+          },
+          (_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Bag updated successfully'),
+                backgroundColor: AppColors.successColor,
+              ),
+            );
+          },
+        );
+      }
+    }
+
+    titleCtrl.dispose();
+    priceCtrl.dispose();
+    oldPriceCtrl.dispose();
+    bagsLeftCtrl.dispose();
   }
 
   void _showAddSheet(BuildContext context) {
@@ -323,6 +603,8 @@ class _RestaurantWithBagsCard extends StatelessWidget {
     String? productId,
   )
   onDeleteProduct;
+  final void Function(BuildContext, String?, AddProductInputEntity) onEditBag;
+  final void Function(BuildContext, String?, AddProductInputEntity) onRestockBag;
 
   const _RestaurantWithBagsCard({
     required this.restaurant,
@@ -332,6 +614,8 @@ class _RestaurantWithBagsCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onDeleteProduct,
+    required this.onEditBag,
+    required this.onRestockBag,
   });
 
   @override
@@ -412,6 +696,8 @@ class _RestaurantWithBagsCard extends StatelessWidget {
                 bag: bag,
                 onDelete: () =>
                     onDeleteProduct(context, restaurant.docId, bag.productId),
+                onEdit: () => onEditBag(context, restaurant.docId, bag),
+                onRestock: () => onRestockBag(context, restaurant.docId, bag),
               ),
             ),
 
@@ -672,12 +958,14 @@ class _RestaurantHeader extends StatelessWidget {
 class _BagCard extends StatelessWidget {
   final AddProductInputEntity bag;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onRestock;
 
-  const _BagCard({required this.bag, this.onDelete});
+  const _BagCard({required this.bag, this.onDelete, this.onEdit, this.onRestock});
 
   @override
   Widget build(BuildContext context) {
-    final oldPrice = bag.oldPrice ?? bag.price;
+    final oldPrice = bag.oldPrice;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -794,13 +1082,16 @@ class _BagCard extends StatelessWidget {
                     const SizedBox(width: 8),
 
                     // Old Price
-                    if (oldPrice > bag.price)
-                      Text(
-                        oldPrice.toStringAsFixed(0),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
-                          decoration: TextDecoration.lineThrough,
+                    if (oldPrice != null && oldPrice > bag.price)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Text(
+                          oldPrice.toStringAsFixed(0),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                            decoration: TextDecoration.lineThrough,
+                          ),
                         ),
                       ),
 
@@ -824,37 +1115,61 @@ class _BagCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  // Reserve action
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade400,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              // Quick Restock Button
+              if (onRestock != null)
+                InkWell(
+                  onTap: onRestock,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          size: 14,
+                          color: Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Restock',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  'Reserve',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                ),
-              ),
               const SizedBox(height: 4),
-              IconButton(
-                tooltip: 'Delete product',
-                onPressed: onDelete,
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Edit bag',
+                    onPressed: onEdit,
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete product',
+                    onPressed: onDelete,
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

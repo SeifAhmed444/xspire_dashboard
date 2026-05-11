@@ -15,15 +15,8 @@ class LoginView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFFAFAFA),
-              const Color(0xFFF0F4F3).withOpacity(0.8),
-            ],
-          ),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF5EFD7),
         ),
         child: Stack(
           children: [
