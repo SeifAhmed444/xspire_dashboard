@@ -281,11 +281,11 @@ class _ManageRestaurantsWithBagsBodyState
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: Row(
+              title: const Row(
                 children: [
                   Icon(Icons.edit, color: AppColors.primaryColor, size: 24),
-                  const SizedBox(width: 10),
-                  const Text('Edit Bag'),
+                  SizedBox(width: 10),
+                  Text('Edit Bag'),
                 ],
               ),
               content: SingleChildScrollView(
@@ -344,8 +344,9 @@ class _ManageRestaurantsWithBagsBodyState
                         const Spacer(),
                         Switch(
                           value: isAvailable,
-                          onChanged: (v) => setDialogState(() => isAvailable = v),
-                          activeColor: AppColors.primaryColor,
+                          onChanged: (v) =>
+                              setDialogState(() => isAvailable = v),
+                          activeThumbColor: AppColors.primaryColor,
                         ),
                       ],
                     ),
@@ -417,13 +418,18 @@ class _ManageRestaurantsWithBagsBodyState
 
       final docId = bag.productId ?? bag.docId;
       if (docId != null) {
-        final updateResult = await _productsRepo.updateProduct(docId, updatedBag);
+        final updateResult = await _productsRepo.updateProduct(
+          docId,
+          updatedBag,
+        );
         updateResult.fold(
           (failure) {
             // Revert on failure
             setState(() {
               final list = _restaurantBags[restaurantId] ?? [];
-              final index = list.indexWhere((b) => b.productId == bag.productId);
+              final index = list.indexWhere(
+                (b) => b.productId == bag.productId,
+              );
               if (index != -1) {
                 list[index] = bag;
                 _restaurantBags[restaurantId!] = List.from(list);
@@ -604,7 +610,8 @@ class _RestaurantWithBagsCard extends StatelessWidget {
   )
   onDeleteProduct;
   final void Function(BuildContext, String?, AddProductInputEntity) onEditBag;
-  final void Function(BuildContext, String?, AddProductInputEntity) onRestockBag;
+  final void Function(BuildContext, String?, AddProductInputEntity)
+  onRestockBag;
 
   const _RestaurantWithBagsCard({
     required this.restaurant,
@@ -898,11 +905,14 @@ class _RestaurantHeader extends StatelessWidget {
                             size: 14,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            restaurant.branchesDisplay,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              restaurant.branchesDisplay,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -912,11 +922,14 @@ class _RestaurantHeader extends StatelessWidget {
                             size: 14,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            restaurant.branchLocation,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              restaurant.branchLocation,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -961,7 +974,12 @@ class _BagCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onRestock;
 
-  const _BagCard({required this.bag, this.onDelete, this.onEdit, this.onRestock});
+  const _BagCard({
+    required this.bag,
+    this.onDelete,
+    this.onEdit,
+    this.onRestock,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1083,25 +1101,31 @@ class _BagCard extends StatelessWidget {
 
                     // Old Price
                     if (oldPrice != null && oldPrice > bag.price)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Text(
-                          oldPrice.toStringAsFixed(0),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                            decoration: TextDecoration.lineThrough,
+                      Flexible(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Text(
+                            oldPrice.toStringAsFixed(0),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
 
                     // New Price
-                    Text(
-                      '${bag.price.toStringAsFixed(0)} EGP',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
+                    Flexible(
+                      child: Text(
+                        '${bag.price.toStringAsFixed(0)} EGP',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -1120,7 +1144,10 @@ class _BagCard extends StatelessWidget {
                 InkWell(
                   onTap: onRestock,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(8),
